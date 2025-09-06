@@ -1,7 +1,7 @@
 # Install `nvidia-container-toolkit` (nvidia-ctk) offline
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/qpod/nvidia-ctk.svg)](https://hub.docker.com/r/qpod/nvidia-ctk)
-[![Docker Starts](https://img.shields.io/docker/stars/qpod/nvidia-ctk.svg)](https://hub.docker.com/r/qpod/nvidia-ctk)
+[![Docker Pulls](https://img.shields.io/docker/pulls/labnow/nvidia-ctk.svg)](https://hub.docker.com/r/labnow/nvidia-ctk)
+[![Docker Starts](https://img.shields.io/docker/stars/labnow/nvidia-ctk.svg)](https://hub.docker.com/r/labnow/nvidia-ctk)
 
 This document and docker image helps you to install `nvidia-ctk` (NVIDIA Container Toolkit) offline, which is especially usefull when your machine is in a restricted / air-gapped network.
 
@@ -41,7 +41,7 @@ Please follow the instructions below to export install packages to your local fi
 ```bash
 # a folder to store tmp files -- do not change it as it will be used in the file: /etc/apt/sources.list.d/nvidia-container-toolkit.list
 LOCAL_REPO="/tmp/nvidia.github.io"
-mkdir -pv ${LOCAL_REPO} && cd ${LOCAL_REPO} && docker run --rm -it -v $(pwd):/tmp qpod/nvidia-ctk
+mkdir -pv ${LOCAL_REPO} && cd ${LOCAL_REPO} && docker run --rm -it -v $(pwd):/tmp labnow/nvidia-ctk
 
 cat $LOCAL_REPO/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 

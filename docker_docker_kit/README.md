@@ -20,7 +20,7 @@ docker run --rm \
   -e DOCKER_REGISTRY_USERNAME='' \
   -e DOCKER_MIRROR_REGISTRY_USERNAME='' \
   -e DOCKER_MIRROR_REGISTRY_PASSWORD='' \
-  qpod/docker-kit python /opt/utils/image-syncer/run_sync.py library/ubuntu --source-registry='quay.io' --target-registry='docker.io'  
+  labnow/docker-kit python /opt/utils/image-syncer/run_sync.py library/ubuntu --source-registry='quay.io' --target-registry='docker.io'  
 ```
 
 Fill the environment variables above, and more details can be found in code: `./work/image-syncer/run_sync.py`.
@@ -45,7 +45,7 @@ registry.cn-hangzhou.aliyuncs.com:
 The `images.yaml` file should look like:
 
 ```yaml
-quay.io/qpod/docker-kit:
-  - docker.io/qpod/docker-kit
-  - registry.cn-hangzhou.aliyuncs.com/qpod/docker-kit
+quay.io/labnow/docker-kit:
+  - docker.io/labnow/docker-kit
+  - registry.cn-hangzhou.aliyuncs.com/labnow/docker-kit
 ```
