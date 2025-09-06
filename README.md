@@ -13,7 +13,7 @@ Please generously STAR★ our project or donate to us!  [![GitHub Starts](https:
 
 Discussion and contributions are welcome:
 [![Join the Discord Chat](https://img.shields.io/badge/Discuss_on-Discord-green)](https://discord.gg/kHUzgQxgbJ)
-[![Open an Issue on GitHub](https://img.shields.io/github/issues/LabNow/lab-foundation)](https://github.com/LabNow-ai/lab-foundation/issues)
+[![Open an Issue on GitHub](https://img.shields.io/github/issues/LabNow-ai/lab-foundation)](https://github.com/LabNow-ai/lab-foundation/issues)
 
 ## AI and Data Science Tools, Right at Your Fingertips
 
