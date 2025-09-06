@@ -1,4 +1,4 @@
-# LabNow Lab Foundation - Container Image Stack
+# LabNow Container Image Stack - Lab Foundation
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/LabNow-ai/lab-foundation/build-docker.yml?branch=main)](https://github.com/LabNow-ai/lab-foundation/actions/workflows/build-docker.yml)
