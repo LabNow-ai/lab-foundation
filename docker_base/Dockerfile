@@ -4,7 +4,7 @@ ARG BASE_NAMESPACE
 ARG BASE_IMG="atom"
 FROM ${BASE_NAMESPACE:+$BASE_NAMESPACE/}${BASE_IMG}
 
-LABEL maintainer="haobibo@gmail.com"
+LABEL maintainer="postmaster@labnow.ai"
 
 ARG SYS_PY_REPLACE="true"
 ARG PYTHON_VERSION="3.12"

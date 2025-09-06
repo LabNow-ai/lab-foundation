@@ -4,7 +4,7 @@
 ARG BASE_IMG="ubuntu:noble"
 FROM ${BASE_IMG}
 
-LABEL maintainer="haobibo@gmail.com"
+LABEL maintainer="postmaster@labnow.ai"
 
 USER root
 
