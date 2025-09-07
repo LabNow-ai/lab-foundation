@@ -17,7 +17,7 @@ concurrency:
 
 env:
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
-  REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'docker.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
+  REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
   REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
   # DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD is required for docker image push, they should be set in CI secrets.
   DOCKER_REGISTRY_USERNAME: ${{ vars.DOCKER_REGISTRY_USERNAME }}
@@ -25,9 +25,10 @@ env:
   # used to sync image to mirror registry
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
+  CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
 
 jobs:
-  qpod_base:
+  job-base:
     name: 'atom,base,python-3.12'
     runs-on: ubuntu-latest
     steps:
@@ -39,9 +40,9 @@ jobs:
           build_image python-3.12 latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.12"
           alias_image python-3.12 latest base latest && push_image
 
-  qpod_python:
+  job-python:
     name: 'python-3.7,python-3.13'
-    needs: 'qpod_base'
+    needs: 'job-base'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,9 +53,9 @@ jobs:
           build_image python-3.7  latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.7"  && push_image          
 
 
-  qpod_core:
+  job-core:
     name: 'core'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,33 +69,33 @@ jobs:
             --build-arg "ARG_PROFILE_LATEX=base,cjk"
           push_image core
 
-  qpod_py-data:
+  job-py-data:
     name: 'py-data'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image py-data latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database" && push_image
 
-  qpod_py-chem:
+  job-py-chem:
     name: 'py-chem'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image py-chem latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,chem,torch" && push_image
 
-  qpod_py-std:
+  job-py-std:
     name: 'py-std'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image py-std  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database,nlp,cv,chem" && push_image
 
-  qpod_py-jdk:
+  job-py-jdk:
     name: 'py-jdk'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,42 +106,42 @@ jobs:
             --build-arg "ARG_PROFILE_JAVA=base"
           push_image
 
-  qpod_r-base:
+  job-r-base:
     name: 'r-base'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image r-base latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base" && push_image
 
-  qpod_r-std:
+  job-r-std:
     name: 'r-std'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image r-std latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base,datascience" --build-arg "ARG_PROFILE_JAVA=base" && push_image
 
-  qpod_node:
+  job-node:
     name: 'node'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image node latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=base" && push_image
 
-  qpod_bun:
+  job-bun:
     name: 'bun'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image bun  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=bun" && push_image
 
 
-  qpod_jdk:
+  job-jdk:
     name: 'jdk-8,jdk-11,jdk-17,jdk-21,jdk'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,17 +153,17 @@ jobs:
           build_image jdk-8  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=8"
           alias_image jdk-11 latest jdk latest && push_image jdk
 
-  qpod_julia:
+  job-julia:
     name: 'julia'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image julia latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JULIA=base"  && push_image
 
-  qpod_go:
+  job-go:
     name: 'go,go-stack'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -173,17 +174,17 @@ jobs:
           build_image go-stack latest docker_core/Dockerfile --build-arg "ARG_PROFILE_GO=base" --build-arg "ARG_PROFILE_NODEJS=base"
           push_image go
 
-  qpod_rust:
+  job-rust:
     name: 'rust'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: source ./tool.sh && build_image rust latest docker_core/Dockerfile --build-arg "ARG_PROFILE_RUST=base"    && push_image
 
-  qpod_data-science-stack:
+  job-data-science-stack:
     name: 'data-science-stack'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -196,9 +197,9 @@ jobs:
             --build-arg "ARG_PROFILE_JULIA=base"
           push_image data-science-stack
 
-  qpod_full-stack:
+  job-full-stack:
     name: 'full-stack'
-    needs: qpod_base
+    needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -215,9 +216,9 @@ jobs:
           push_image full-stack
 
   ## Postgres
-  qpod_postgres:
+  job-postgres:
     name: 'postgres-17,postgres-16,postgres-15'
-    needs: ["qpod_base"]
+    needs: ["job-base"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -234,9 +235,9 @@ jobs:
           push_image postgres-
 
   ## DockerKit - including image-syncer and docker-compsoe
-  qpod_docker_kit:
+  job-docker_kit:
     name: 'docker-kit'
-    needs: ["qpod_base"]
+    needs: ["job-base"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -245,15 +246,15 @@ jobs:
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
         run: |
           source ./tool.sh && build_image docker-kit latest docker_docker_kit/Dockerfile && push_image docker-kit
-          echo "jobs: { qpod_docker_kit: { name: 'docker-kit' } }" | tee ".github/workflows/build-docker.yml" > /dev/null
+          echo "jobs: { job-docker_kit: { name: 'docker-kit' } }" | tee ".github/workflows/build-docker.yml" > /dev/null
           printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
-          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-qpod}/docker-kit \
+          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
             python /opt/utils/image-syncer/run_jobs.py --auth-file=/tmp/.github/workflows/auth.json
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   sync_images:
-    needs: ["qpod_docker_kit", "qpod_postgres", "qpod_full-stack", "qpod_core"]
+    needs: ["job-docker_kit", "job-postgres", "job-full-stack", "job-core"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -264,5 +265,5 @@ jobs:
           source ./tool.sh
           printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
-          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-qpod}/docker-kit \
+          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
             python /opt/utils/image-syncer/run_jobs.py --auth-file=/tmp/.github/workflows/auth.json

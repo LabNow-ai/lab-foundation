@@ -4,7 +4,7 @@ ARG BASE_NAMESPACE
 ARG BASE_IMG="cuda:latest"
 FROM ${BASE_NAMESPACE:+$BASE_NAMESPACE/}${BASE_IMG}
 
-LABEL maintainer="haobibo@gmail.com"
+LABEL maintainer="postmaster@labnow.ai"
 
 # Let NVIDIA docker ignore cuda requirement check
 ENV NVIDIA_DISABLE_REQUIRE=1

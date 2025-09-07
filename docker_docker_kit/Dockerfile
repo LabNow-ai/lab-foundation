@@ -4,7 +4,7 @@ ARG BASE_NAMESPACE
 ARG BASE_IMG="base"
 FROM ${BASE_NAMESPACE:+$BASE_NAMESPACE/}${BASE_IMG}
 
-LABEL maintainer="haobibo@gmail.com"
+LABEL maintainer="postmaster@labnow.ai"
 ENV XDG_RUNTIME_DIR="/tmp"
 
 COPY work /opt/utils/

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -xu
 
-CI_PROJECT_NAME=${GITHUB_REPOSITORY:-"QPod/lab-foundation"}
+CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
 CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-"main"}
 CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 
@@ -9,7 +9,7 @@ if [ "${CI_PROJECT_BRANCH}" = "main" ] ; then
     # If on the main branch, docker images namespace will be same as CI_PROJECT_NAME's name space
     export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})" ;
 else
-    # not main branch, docker namespace = {CI_PROJECT_NAME's name space} + "0" + {1st substr before / in CI_PROJECT_SPACE}
+    # not main branch, docker namespace = {CI_PROJECT_NAME's name space} + "-" + {1st substr before / in CI_PROJECT_SPACE}
     export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})0${CI_PROJECT_SPACE}" ;
 fi
 

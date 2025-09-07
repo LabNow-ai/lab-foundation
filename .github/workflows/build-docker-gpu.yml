@@ -17,7 +17,7 @@ concurrency:
 
 env:
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
-  REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'docker.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
+  REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
   REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
   # DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD is required for docker image push, they should be set in CI secrets.
   DOCKER_REGISTRY_USERNAME: ${{ vars.DOCKER_REGISTRY_USERNAME }}
@@ -25,6 +25,7 @@ env:
   # used to sync image to mirror registry
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
+  CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
 
 jobs:
   # cuda docker image tags: https://hub.docker.com/r/nvidia/cuda/tags
@@ -32,7 +33,7 @@ jobs:
   # latest cuda supported by tensorflow: https://tensorflow.google.cn/install/source?hl=en#gpu
   # latest cuda supported by paddlepadle: https://www.paddlepaddle.org.cn/
   # latest cuda supported by vllm: https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html?device=cuda
-  qpod_cuda_126:
+  job-cuda_126:
     name: 'cuda_12.6,cuda,nvidia-cuda'
     runs-on: ubuntu-latest
     steps:
@@ -47,7 +48,7 @@ jobs:
           push_image cuda
 
   # reserved for vllm: https://github.com/vllm-project/vllm/blob/main/docker/Dockerfile
-  qpod_cuda_128:
+  job-cuda_128:
     name: 'cuda_12.8'
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +62,7 @@ jobs:
           push_image cuda
 
   # reserved for paddlepaddl 2.6: https://www.paddlepaddle.org.cn
-  qpod_cuda_120:
+  job-cuda_120:
     name: 'cuda_12.0'
     runs-on: ubuntu-latest
     steps:
@@ -75,7 +76,7 @@ jobs:
           push_image cuda
 
   # reserved for paddlepaddl 2.6, torch, and vllm
-  qpod_cuda_118:
+  job-cuda_118:
     name: 'cuda_11.8'
     runs-on: ubuntu-latest
     steps:
@@ -90,7 +91,7 @@ jobs:
 
 
   # reserved for tensorflow 1.x
-  qpod_cuda_112:
+  job-cuda_112:
     name: 'cuda_11.2'
     runs-on: ubuntu-latest
     steps:
@@ -104,9 +105,9 @@ jobs:
           push_image cuda
 
 
-  qpod_tf2:
+  job-tf2:
     name: 'tf2,tf2-cuda126'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -116,9 +117,9 @@ jobs:
           alias_image tf2-cuda126 latest tf2 latest
           push_image
 
-  qpod_torch_cuda126:
+  job-torch_cuda126:
     name: 'torch,torch-cuda126'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -128,9 +129,9 @@ jobs:
           alias_image torch-cuda126 latest torch latest
           push_image
 
-  qpod_paddle_cuda120:
+  job-paddle_cuda120:
     name: 'paddle-cuda120,paddle-2.6'
-    needs: qpod_cuda_120
+    needs: job-cuda_120
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -140,9 +141,9 @@ jobs:
           alias_image paddle-cuda120 latest paddle-2.6 latest
           push_image
 
-  qpod_paddle_cuda126:
+  job-paddle_cuda126:
     name: 'paddle-cuda126,paddle-3.0'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -153,9 +154,9 @@ jobs:
           push_image
 
 
-  qpod_py-nlp:
+  job-py-nlp:
     name: 'py-nlp,py-nlp-cuda126'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -165,9 +166,9 @@ jobs:
           alias_image py-nlp-cuda126 latest py-nlp latest
           push_image
 
-  qpod_py-nlp-cuda128:
+  job-py-nlp-cuda128:
     name: 'py-nlp-cuda128'
-    needs: qpod_cuda_128
+    needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -177,9 +178,9 @@ jobs:
           push_image
 
 
-  qpod_py-cv:
+  job-py-cv:
     name: 'py-cv'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -189,9 +190,9 @@ jobs:
           push_image
 
 
-  qpod_core-cuda:
+  job-core-cuda:
     name: 'core-cuda,full-cuda-12.6'
-    needs: qpod_cuda_126
+    needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -206,7 +207,7 @@ jobs:
             --build-arg "ARG_PROFILE_LATEX=base,cjk"
           alias_image full-cuda-12.6 latest core-cuda latest && push_image cuda
 
-  qpod_nvidia-ctk:
+  job-nvidia-ctk:
     name: 'nvidia-ctk'
     runs-on: ubuntu-latest
     steps:
@@ -218,7 +219,7 @@ jobs:
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   sync_images:
-    needs: ["qpod_core-cuda", "qpod_py-cv", "qpod_py-nlp", "qpod_torch_cuda126", "qpod_nvidia-ctk"]
+    needs: ["job-core-cuda", "job-py-cv", "job-py-nlp", "job-torch_cuda126", "job-nvidia-ctk"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -229,6 +230,6 @@ jobs:
           source ./tool.sh
           printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
-          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-qpod}/docker-kit \
+          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
             python /opt/utils/image-syncer/run_jobs.py --auth-file=/tmp/.github/workflows/auth.json \
               --workflow-file=".github/workflows/build-docker-gpu.yml"
