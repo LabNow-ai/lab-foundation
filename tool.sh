@@ -10,7 +10,7 @@ if [ "${CI_PROJECT_BRANCH}" = "main" ] ; then
     export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})" ;
 else
     # not main branch, docker namespace = {CI_PROJECT_NAME's name space} + "-" + {1st substr before / in CI_PROJECT_SPACE}
-    export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})-${CI_PROJECT_SPACE}" ;
+    export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})0${CI_PROJECT_SPACE}" ;
 fi
 
 export IMG_NAMESPACE=$(echo "${CI_PROJECT_NAMESPACE}" | awk '{print tolower($0)}')
