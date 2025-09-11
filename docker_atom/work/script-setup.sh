@@ -56,7 +56,7 @@ EOF
 }
 
 setup_conda_with_mamba() {
-     VERSION_PYTHON=${1:-"3.12"}; shift 1;
+     VERSION_PYTHON=${1:-"3.13"}; shift 1;
      local PREFIX="${CONDA_PREFIX:-/opt/conda}" \
   && mkdir -pv "${PREFIX}" \
   && mamba install -y --root-prefix="${PREFIX}" --prefix="${PREFIX}" -c "conda-forge" conda pip python="${VERSION_PYTHON}" \
