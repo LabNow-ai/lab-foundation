@@ -27,4 +27,6 @@ LabNow —— 一键开启的数据科学与 AI 环境，加速你的智能创�
 
 ## Documentation & Tutorial
 
-[Wiki & Document](https://LabNow.ai) | [中文使用指引(含中国网络镜像)](https://labnow-ai.feishu.cn/wiki/wikcn0sBhMtb1KNRSUTettxWstc)
+[Wiki & Document](https://LabNow.ai)
+| [中文使用指引(含中国网络镜像)](https://labnow-ai.feishu.cn/wiki/wikcn0sBhMtb1KNRSUTettxWstc)
+| [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LabNow-ai/lab-foundation)
