@@ -77,7 +77,7 @@ RUN set -eux \
          echo "If CUDA version < 11.7, install pytorch 1.x, else install pytorch 2.x; if cuda doesn't exist, install pytorch 2.x" \
       && export CUDA_VER_TORCH="117" && V=$([[ "${CUDA_VER:-999}" -lt "${CUDA_VER_TORCH}" ]] && echo "torch<2" || echo "torch") \
       && pip install --no-cache-dir --root-user-action=ignore -U --pre "${V}" torchvision torchaudio --index-url "https://download.pytorch.org/whl/${IDX}" \
-      && if [ "$(echo "${IDX}" | cut -c1-4)" = "cuda" ]; then \
+      && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ]; then \
             echo "Uninstalling nvidia python packages to reduce disk size..." \
             && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
             && apt-get -qq install -y --no-install-recommends libcusparseLt0 libnccl2 libnccl-dev ; \
