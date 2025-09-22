@@ -96,7 +96,7 @@ RUN set -eux \
  && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ]; then \
           echo "Try to uninstall nvidia python packages to reduce storage size..." \
        && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
-       && apt-get -qq install -y --no-install-recommends libcusparseLt0 libnccl2 libnccl-dev ; \
+       && apt-get -qq install -y --no-install-recommends libcusparse-dev libnccl2 libnccl-dev ; \
     fi \
  # -----------------------------
  && if echo "${ARG_PROFILE_GO}" | grep -q "base" ; then \
