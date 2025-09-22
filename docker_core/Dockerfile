@@ -77,11 +77,6 @@ RUN set -eux \
          echo "If CUDA version < 11.7, install pytorch 1.x, else install pytorch 2.x; if cuda doesn't exist, install pytorch 2.x" \
       && export CUDA_VER_TORCH="117" && V=$([[ "${CUDA_VER:-999}" -lt "${CUDA_VER_TORCH}" ]] && echo "torch<2" || echo "torch") \
       && pip install --no-cache-dir --root-user-action=ignore -U --pre "${V}" torchvision torchaudio --index-url "https://download.pytorch.org/whl/${IDX}" \
-      && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ]; then \
-            echo "Uninstalling nvidia python packages to reduce disk size..." \
-            && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
-            && apt-get -qq install -y --no-install-recommends libcusparseLt0 libnccl2 libnccl-dev ; \
-         fi \
     ) || echo "Skipping pytorch install" ) \
  # -----------------------------
  && echo "Handle paddle installation, cpu/gpu: https://www.paddlepaddle.org.cn/" \
@@ -98,6 +93,11 @@ RUN set -eux \
       [ -f "/opt/utils/install_list_PY_${profile}.apt" ] && install_apt "/opt/utils/install_list_PY_${profile}.apt" || echo "apt install skipped for ${profile}" ; \
       [ -f "/opt/utils/install_list_PY_${profile}.pip" ] && install_pip "/opt/utils/install_list_PY_${profile}.pip" || echo "pip install skipped for ${profile}" ; \
     ) ; done \
+ && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ]; then \
+          echo "Try to uninstall nvidia python packages to reduce storage size..." \
+       && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
+       && apt-get -qq install -y --no-install-recommends libcusparseLt0 libnccl2 libnccl-dev ; \
+    fi \
  # -----------------------------
  && if echo "${ARG_PROFILE_GO}" | grep -q "base" ; then \
        echo "Installing GO: ${ARG_PROFILE_GO}" && setup_GO ; \
