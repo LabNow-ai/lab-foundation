@@ -91,7 +91,7 @@ RUN set -eux \
       [ -f "/opt/utils/install_list_PY_${profile}.apt" ] && install_apt "/opt/utils/install_list_PY_${profile}.apt" || echo "apt install skipped for ${profile}" ; \
       [ -f "/opt/utils/install_list_PY_${profile}.pip" ] && install_pip "/opt/utils/install_list_PY_${profile}.pip" || echo "pip install skipped for ${profile}" ; \
     ) ; done \
- && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ]; then \
+ && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ] && echo "${ARG_PROFILE_PYTHON}" | grep -q "torch" ; then \
           echo "Try to uninstall nvidia python packages to reduce storage size..." \
        && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
        && apt-get -qq update --fix-missing && apt-get -qq install -y --no-install-recommends --allow-change-held-packages libcusparselt0 libnccl2 libnccl-dev ; \
