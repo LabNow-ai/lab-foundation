@@ -83,8 +83,6 @@ RUN set -eux \
  && ( $(grep -q "paddle" <<< "${ARG_PROFILE_PYTHON}") && ( \
          URL_PYPI_PADDLE="https://www.paddlepaddle.org.cn/packages/stable/${IDX}/" \
       && PADDLE=$( [ -x "$(command -v nvcc)" ] && echo "paddlepaddle-gpu" || echo "paddlepaddle") \
- #    && PADDLE_VER=$(pip index versions ${PADDLE} -f ${URL_PYPI_PADDLE} | grep 'Available' | cut -d ":" -f 2 | tr ', ' '\n' | grep ${CUDA_VER:-'.'} | head -n 1) \
- #    && V=$(echo ${PADDLE}==${PADDLE_VER}) && echo "to install paddle: ${V}" \
       && pip install --no-cache-dir --root-user-action=ignore -U --pre --index-url ${URL_PYPI_PADDLE} "${PADDLE}" \
     ) || echo "Skip paddle install" ) \
  # -----------------------------
@@ -93,6 +91,11 @@ RUN set -eux \
       [ -f "/opt/utils/install_list_PY_${profile}.apt" ] && install_apt "/opt/utils/install_list_PY_${profile}.apt" || echo "apt install skipped for ${profile}" ; \
       [ -f "/opt/utils/install_list_PY_${profile}.pip" ] && install_pip "/opt/utils/install_list_PY_${profile}.pip" || echo "pip install skipped for ${profile}" ; \
     ) ; done \
+ && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ] && echo "${ARG_PROFILE_PYTHON}" | grep -qE "torch|paddle" ; then \
+          echo "Try to uninstall nvidia python packages to reduce storage size..." \
+       && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
+       && apt-get -qq update --fix-missing && apt-get -qq install -y --no-install-recommends --allow-change-held-packages libcusparselt0 libnccl2 libnccl-dev ; \
+    fi \
  # -----------------------------
  && if echo "${ARG_PROFILE_GO}" | grep -q "base" ; then \
        echo "Installing GO: ${ARG_PROFILE_GO}" && setup_GO ; \
