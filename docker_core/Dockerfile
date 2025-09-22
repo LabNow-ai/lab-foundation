@@ -81,7 +81,7 @@ RUN set -eux \
             echo "Uninstalling nvidia python packages to reduce disk size..." \
             && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
             && apt-get -qq install -y --no-install-recommends libcusparseLt0 libnccl2 libnccl-dev \
-         fi
+         fi \
     ) || echo "Skipping pytorch install" ) \
  # -----------------------------
  && echo "Handle paddle installation, cpu/gpu: https://www.paddlepaddle.org.cn/" \
