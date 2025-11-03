@@ -37,30 +37,34 @@ jobs:
   # reserved for vllm: https://github.com/vllm-project/vllm/blob/main/docker/Dockerfile
   job-cuda_128:
     name: 'cuda_12.8,cuda,nvidia-cuda'
-    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          include: [{arch: amd64, runner: ubuntu-latest}] # , {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh
           build_image_no_tag nvidia-cuda 12.8.1-cudnn-devel-ubuntu24.04 docker_atom/Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image_no_tag tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.8.1-cudnn-devel-ubuntu24.04"
-          build_image cuda_12.8 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp"
-          push_image cuda
+          PUSH=false TAG_VER=false    build_image tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.8.1-cudnn-devel-ubuntu24.04"
+          build_image cuda_12.8 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
 
   job-cuda_126:
     name: 'cuda_12.6'
-    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          include: [{arch: amd64, runner: ubuntu-latest}] # , {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh
           build_image_no_tag nvidia-cuda 12.6.3-cudnn-devel-ubuntu24.04 docker_atom/Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.6.3-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image_no_tag tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.6.3-cudnn-devel-ubuntu24.04"
-          build_image cuda_12.6 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp"
-          alias_image cuda_12.6 latest cuda latest
-          push_image cuda
+          PUSH=false TAG_VER=false    build_image tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.6.3-cudnn-devel-ubuntu24.04"
+          build_image cuda_12.6 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
+          build_image cuda      latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
 
   job-tf2:
     name: 'tf2,tf2-cuda126'
@@ -71,8 +75,7 @@ jobs:
       - run: |
           source ./tool.sh
           build_image tf2-cuda126 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
-          alias_image tf2-cuda126 latest tf2 latest
-          push_image
+          build_image tf2         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
 
   job-torch_cuda128:
     name: 'torch,torch-cuda128'
@@ -83,8 +86,7 @@ jobs:
       - run: |
           source ./tool.sh
           build_image torch-cuda128 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
-          alias_image torch-cuda128 latest torch latest
-          push_image
+          build_image torch         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
 
   job-paddle_cuda126:
     name: 'paddle-cuda126,paddle-3.0'
@@ -95,8 +97,7 @@ jobs:
       - run: |
           source ./tool.sh
           build_image paddle-cuda126 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
-          alias_image paddle-cuda126 latest paddle-3.0 latest
-          push_image
+          build_image paddle-3.0     latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
 
 
   job-py-nlp:
@@ -108,8 +109,7 @@ jobs:
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image py-nlp-cuda128 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
-          alias_image py-nlp-cuda128 latest py-nlp latest
-          push_image
+          build_image py-nlp         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
 
   job-py-cv:
     name: 'py-cv'
@@ -120,7 +120,6 @@ jobs:
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image py-cv   latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,cv"
-          push_image
 
 
   job-core-cuda:
@@ -131,14 +130,20 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh && free_diskspace && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image full-cuda-12.8 latest docker_core/Dockerfile \
+          build_image full-cuda-12.8  latest docker_core/Dockerfile \
             --build-arg "BASE_IMG=cuda_12.8" \
             --build-arg "ARG_PROFILE_PYTHON=base,datascience,mkl,database,nlp,cv,chem,tf2,torch" \
             --build-arg "ARG_PROFILE_R=base,datascience" \
             --build-arg "ARG_PROFILE_NODEJS=base" \
             --build-arg "ARG_PROFILE_JAVA=base,maven" \
             --build-arg "ARG_PROFILE_LATEX=base,cjk"
-          alias_image full-cuda-12.8 latest core-cuda latest && push_image cuda
+          build_image core-cuda       latest docker_core/Dockerfile \
+            --build-arg "BASE_IMG=cuda_12.8" \
+            --build-arg "ARG_PROFILE_PYTHON=base,datascience,mkl,database,nlp,cv,chem,tf2,torch" \
+            --build-arg "ARG_PROFILE_R=base,datascience" \
+            --build-arg "ARG_PROFILE_NODEJS=base" \
+            --build-arg "ARG_PROFILE_JAVA=base,maven" \
+            --build-arg "ARG_PROFILE_LATEX=base,cjk"
 
   job-nvidia-ctk:
     name: 'nvidia-ctk'
@@ -147,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="docker.io/library"
-          build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile		&& push_image
+          build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile
 
 
   ## Sync all images in this build (listed by "names") to mirror registry.
