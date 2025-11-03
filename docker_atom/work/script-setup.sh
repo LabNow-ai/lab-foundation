@@ -3,14 +3,17 @@ source /opt/utils/script-utils.sh
 
 setup_mamba() {
   # Notice: mamba use $CONDA_PREFIX to locate base env
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="64" && MICROMAMBA_VERSION="latest" \
-  && MAMBA_URL="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${MICROMAMBA_VERSION}" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && MICROMAMBA_VERSION="latest" \
+  && ARCH=$(uname -m | sed -e 's/x86_64/64/') \
+  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${MICROMAMBA_VERSION}" \
+  && echo "Downloading micromamba from ${URL_MICROMAMBA}" \
   && mkdir -pv /opt/mamba /etc/conda \
-  && install_tar_bz $MAMBA_URL bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
+  && install_tar_bz $URL_MICROMAMBA bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
   && ln -sf /opt/mamba/mamba /usr/bin/ \
-  && touch /etc/conda/.condarc \
+  && touch /etc/conda/.condarc && ln -sf /etc/conda/.condarc /opt/conda/.condarc \
   && printf "channels:\n"       >> /etc/conda/.condarc \
-  && printf "  - conda-forge\n" >> /etc/conda/.condarc ;
+  && printf "  - conda-forge\n" >> /etc/conda/.condarc \
+  && cat /etc/conda/.condarc ;
   
   type mamba && echo "@ Version of mamba: $(mamba info)" || return -1 ;
 }
@@ -98,7 +101,7 @@ setup_java_base() {
   ## 23, 21(LTS); 17, 11, 8
 
   local VER_JDK=${VERSION_JDK:-"11"}
-  ARCH="x64"
+  ARCH=$(uname -m | sed -e 's/x86_64/x64/')
   IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false)
 
   echo "Use env var VERSION_JDK to specify JDK major version. If not specified, will install version 11 by default."
@@ -137,7 +140,8 @@ setup_java_maven() {
 
 
 setup_node_base() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="x64" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
   && VER_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[.\d]+') \
   && VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1 ) \
   && NODEJS_URL="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
@@ -153,7 +157,8 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="x64" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
   && VER_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | head -1 | grep -Po '\d[\d.]+') \
   && URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
@@ -166,7 +171,8 @@ setup_node_pnpm() {
 }
 
 setup_node_bun() {
-  UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="x64" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
   && VER_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+') \
   && BUN_URL="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
   && echo "Downloading bun from: ${BUN_URL}" \
@@ -183,8 +189,9 @@ setup_node_bun() {
 
 setup_GO() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(dpkg --print-architecture) \
   && VER_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | head -1 | grep -Po '\d[\d.]+') \
-  && URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-$(dpkg --print-architecture).tar.gz" \
+  && URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
   && ln -sf /opt/go/bin/go* /usr/bin/ \
@@ -226,8 +233,12 @@ setup_R_base() {
 
 
 setup_julia() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="64" \
-  && URL_JULIA="https://julialangnightlies-s3.julialang.org/bin/${UNAME}/x64/julia-latest-${UNAME}${ARCH}.tar.gz" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH_1=$(uname -m) \
+  && ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
+  && VER_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep 'releases/tag' | grep -v 'rc' | head -1 | grep -Po '\d[\d.]+') \
+  && VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
+  && URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
   && install_tar_gz $URL_JULIA \
   && mv /opt/julia-* /opt/julia \
   && ln -fs /opt/julia/bin/julia /usr/bin/julia \
@@ -254,9 +265,9 @@ setup_lua_base() {
 
 setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
-    UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="x86_64" \
- && VER_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}-${ARCH}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1) \
- && URL_LUA_ROCKS="http://luarocks.github.io/luarocks/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
+    UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+ && VER_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1) \
+ && URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
  && install_tar_gz $URL_LUA_ROCKS \
  && mv /opt/luarocks-* /tmp/luarocks && cd /tmp/luarocks \
@@ -269,7 +280,8 @@ setup_lua_rocks() {
 
 
 setup_bazel() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && ARCH="x64_64" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
   && VER_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
   && URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
