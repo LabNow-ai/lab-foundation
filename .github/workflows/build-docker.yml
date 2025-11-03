@@ -26,6 +26,8 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+  DOCKER_PLATFORM: amd64,arm64
+
 
 jobs:
   job-base:
@@ -35,10 +37,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh
-          build_image atom latest docker_atom/Dockerfile && push_image
+          build_image atom latest docker_atom/Dockerfile
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image python-3.12 latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.12"
-          alias_image python-3.12 latest base latest && push_image
+          build_image base        latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.12"
 
   job-python:
     name: 'python-3.7,python-3.13'
@@ -49,8 +51,8 @@ jobs:
       - run: |
           source ./tool.sh
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image python-3.13 latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.13" && push_image
-          build_image python-3.7  latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.7"  && push_image          
+          build_image python-3.13 latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.13"
+          build_image python-3.7  latest docker_base/Dockerfile --build-arg "PYTHON_VERSION=3.7"
 
 
   job-core:
@@ -67,7 +69,6 @@ jobs:
             --build-arg "ARG_PROFILE_NODEJS=base" \
             --build-arg "ARG_PROFILE_JAVA=base,maven" \
             --build-arg "ARG_PROFILE_LATEX=base,cjk"
-          push_image core
 
   job-py-data:
     name: 'py-data'
@@ -75,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image py-data latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database" && push_image
+      - run: source ./tool.sh && build_image py-data latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database"
 
   job-py-chem:
     name: 'py-chem'
@@ -83,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image py-chem latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,chem,torch" && push_image
+      - run: source ./tool.sh && build_image py-chem latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,chem,torch"
 
   job-py-std:
     name: 'py-std'
@@ -91,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image py-std  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database,nlp,cv,chem" && push_image
+      - run: source ./tool.sh && build_image py-std  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database,nlp,cv,chem"
 
   job-py-jdk:
     name: 'py-jdk'
@@ -104,7 +105,6 @@ jobs:
           build_image py-jdk  latest docker_core/Dockerfile \
             --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database,nlp,cv,chem" \
             --build-arg "ARG_PROFILE_JAVA=base"
-          push_image
 
   job-r-base:
     name: 'r-base'
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image r-base latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base" && push_image
+      - run: source ./tool.sh && build_image r-base latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base"
 
   job-r-std:
     name: 'r-std'
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image r-std latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base,datascience" --build-arg "ARG_PROFILE_JAVA=base" && push_image
+      - run: source ./tool.sh && build_image r-std latest docker_core/Dockerfile --build-arg "ARG_PROFILE_R=base,datascience" --build-arg "ARG_PROFILE_JAVA=base"
 
   job-node:
     name: 'node'
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image node latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=base" && push_image
+      - run: source ./tool.sh && build_image node latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=base"
 
   job-bun:
     name: 'bun'
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image bun  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=bun" && push_image
+      - run: source ./tool.sh && build_image bun  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_NODEJS=bun"
 
 
   job-jdk:
@@ -151,7 +151,6 @@ jobs:
           build_image jdk-17 latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=17"
           build_image jdk-11 latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=11"
           build_image jdk-8  latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=8"
-          alias_image jdk-11 latest jdk latest && push_image jdk
 
   job-julia:
     name: 'julia'
@@ -159,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image julia latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JULIA=base"  && push_image
+      - run: source ./tool.sh && build_image julia latest docker_core/Dockerfile --build-arg "ARG_PROFILE_JULIA=base"
 
   job-go:
     name: 'go,go-stack'
@@ -172,7 +171,6 @@ jobs:
           build_image go       latest docker_core/Dockerfile --build-arg "ARG_PROFILE_GO=base"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image go-stack latest docker_core/Dockerfile --build-arg "ARG_PROFILE_GO=base" --build-arg "ARG_PROFILE_NODEJS=base"
-          push_image go
 
   job-rust:
     name: 'rust'
@@ -180,7 +178,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: source ./tool.sh && build_image rust latest docker_core/Dockerfile --build-arg "ARG_PROFILE_RUST=base"    && push_image
+      - run: source ./tool.sh && build_image rust latest docker_core/Dockerfile --build-arg "ARG_PROFILE_RUST=base"
 
   job-data-science-stack:
     name: 'data-science-stack'
@@ -195,7 +193,6 @@ jobs:
             --build-arg "ARG_PROFILE_R=base,datascience" \
             --build-arg "ARG_PROFILE_NODEJS=base" \
             --build-arg "ARG_PROFILE_JULIA=base"
-          push_image data-science-stack
 
   job-full-stack:
     name: 'full-stack'
@@ -213,26 +210,6 @@ jobs:
             --build-arg "ARG_PROFILE_JULIA=base" \
             --build-arg "ARG_PROFILE_GO=base" \
             --build-arg "ARG_PROFILE_RUST=base"
-          push_image full-stack
-
-  ## Postgres
-  job-postgres:
-    name: 'postgres-17,postgres-16,postgres-15'
-    needs: ["job-base"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          source ./tool.sh
-          build_image_no_tag postgres-17 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:17"
-          build_image_no_tag postgres-16 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:16"
-          build_image_no_tag postgres-15 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:15"
-
-          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image postgres-17 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-17" --build-arg "PYTHON_VERSION=3.12"
-          build_image postgres-16 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-16" --build-arg "PYTHON_VERSION=3.12"
-          build_image postgres-15 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-15" --build-arg "PYTHON_VERSION=3.12"
-          push_image postgres-
 
   ## DockerKit - including image-syncer and docker-compsoe
   job-docker_kit:
@@ -245,7 +222,7 @@ jobs:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
         run: |
-          source ./tool.sh && build_image docker-kit latest docker_docker_kit/Dockerfile && push_image docker-kit
+          source ./tool.sh && build_image docker-kit latest docker_docker_kit/Dockerfile
           echo "jobs: { job-docker_kit: { name: 'docker-kit' } }" | tee ".github/workflows/build-docker.yml" > /dev/null
           printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
@@ -254,7 +231,7 @@ jobs:
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   sync_images:
-    needs: ["job-docker_kit", "job-postgres", "job-full-stack", "job-core"]
+    needs: ["job-docker_kit", "job-full-stack", "job-core"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
