@@ -2,7 +2,7 @@ source /opt/utils/script-utils.sh
 
 
 setup_docker_compose() {
-     ARCH="x86_64" \
+     ARCH=$(uname -m) \
   && VER_COMPOSE=$(curl -sL https://github.com/docker/compose/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[.\d]+') \
   && URL_COMPOSE="https://github.com/docker/compose/releases/download/v${VER_COMPOSE}/docker-compose-linux-${ARCH}" \
   && echo "Downloading Compose from: ${URL_COMPOSE}" \
@@ -13,7 +13,7 @@ setup_docker_compose() {
 }
 
 setup_docker_syncer() {
-     ARCH="amd64" \
+     ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && VER_SYNCER="$(curl -sL https://github.com/AliyunContainerService/image-syncer/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[.\d]+')" \
   && URL_SYNCER="https://github.com/AliyunContainerService/image-syncer/releases/download/v${VER_SYNCER}/image-syncer-v${VER_SYNCER}-linux-${ARCH}.tar.gz" \
   && echo "Downloading image-syncer from: ${URL_SYNCER}" \

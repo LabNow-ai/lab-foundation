@@ -7,7 +7,7 @@ This document and docker image helps you to install `nvidia-ctk` (NVIDIA Contain
 
 ## Step 1. Install container engine
 
-Make sure you have installed your container engine (e.g. docker-ce) properly.
+Ensure you have installed your container engine (e.g. docker-ce) properly.
 
 ## Step 2. Install NVIDIA driver
 
