@@ -21,7 +21,7 @@ setup_mysql_client() {
 
 
 setup_mongosh_client() {
-  local VER_MONGOSH=${1:-"8.2"} ;
+  local VER_MONGOSH=${1:-"8.0"} ;
   # from: https://www.mongodb.com/docs/mongodb-shell/install/
   local DISTRO=$(lsb_release -cs) ;
   curl -sL https://www.mongodb.org/static/pgp/server-${VER_MONGOSH}.asc | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc ;
