@@ -1,4 +1,4 @@
-# source /opt/utils/script-utils.sh
+source /opt/utils/script-utils.sh
 
 
 setup_postgresql_client() {
