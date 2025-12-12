@@ -110,7 +110,7 @@ RUN set -eux \
     fi \
  # -----------------------------
  && if echo "${ARG_PROFILE_JULIA}" | grep -q "base" ; then \
-       echo "Installing julia: ${ARG_PROFILE_JULIA}" && setup_julia ; \
+       echo "Installing julia: ${ARG_PROFILE_JULIA}" && setup_julia 1.12.2 ; \
     else \
        echo "Skip installing julia" ; \
     fi \
