@@ -205,8 +205,13 @@ setup_GO() {
 
 
 setup_rust() {
-  curl -sSf https://sh.rustup.rs | sudo CARGO_HOME=/opt/cargo RUSTUP_HOME=/opt/rust PATH=$PATH:${CARGO_HOME}/bin sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable \
-  && echo 'export CARGO_HOME="/opt/cargo"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
+  curl -sSf https://sh.rustup.rs \
+  | sudo sh -c '
+    export CARGO_HOME=/opt/cargo
+    export RUSTUP_HOME=/opt/rust
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable
+  '
+     echo 'export CARGO_HOME="/opt/cargo"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export RUSTUP_HOME="/opt/rust"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null ;
 
