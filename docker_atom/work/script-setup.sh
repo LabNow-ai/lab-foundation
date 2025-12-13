@@ -11,8 +11,8 @@ setup_mamba() {
   && install_tar_bz $URL_MICROMAMBA bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
   && ln -sf /opt/mamba/mamba /usr/bin/ \
   && touch /etc/conda/.condarc && ln -sf /etc/conda/.condarc /opt/conda/.condarc \
-  && printf "channels:\n"       >> /etc/conda/.condarc \
-  && printf "  - conda-forge\n" >> /etc/conda/.condarc \
+  && printf "channels:\n"       | sudo tee -a /etc/conda/.condarc \
+  && printf "  - conda-forge\n" | sudo tee -a /etc/conda/.condarc \
   && cat /etc/conda/.condarc ;
   
   type mamba && echo "@ Version of mamba: $(mamba info)" || return -1 ;
@@ -35,7 +35,7 @@ trusted-host=pypi.python.org pypi.org files.pythonhosted.org
 EOF
   fi
 
-  echo 'export PATH=${CONDA_PREFIX:-"/opt/conda"}/bin:${PATH}'		>> /etc/profile.d/path-conda.sh
+  echo 'export PATH=${CONDA_PREFIX:-"/opt/conda"}/bin:${PATH}'	| sudo tee -a /etc/profile.d/path-conda.sh
   ln -sf "${CONDA_PREFIX}/bin/conda" /usr/bin/
 
      conda config --system --prepend channels conda-forge \
@@ -149,7 +149,7 @@ setup_node_base() {
   && install_tar_gz ${NODEJS_URL} \
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
-  && echo 'export PATH=${PATH}:/opt/node/bin' >> /etc/profile.d/path-node.sh \
+  && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
   && npm install -g npm ;
   # cd /tmp && corepack enable && yarn set version stable && echo "@ Version of Yarn: $(yarn -v)"
   type node && echo "@ Version of Node and node: $(node -v)" || return -1 ;
@@ -163,9 +163,9 @@ setup_node_pnpm() {
   && URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
   && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
-  && chmod +x /usr/local/bin/pnpm \
-  && echo 'export PNPM_HOME="/usr/local/bin"' >> /etc/profile.d/path-pnpm.sh \
-  && echo 'export PATH=$PATH:$PNPM_HOME' >> /etc/profile.d/path-pnpm.sh ;
+  && sudo chmod +x /usr/local/bin/pnpm \
+  && echo 'export PNPM_HOME="/usr/local/bin"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
+  && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh ;
 
   type pnpm && echo "@ Version of pnpm: $(pnpm --version)" || return -1 ;
 }
@@ -177,11 +177,11 @@ setup_node_bun() {
   && BUN_URL="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
   && echo "Downloading bun from: ${BUN_URL}" \
   && curl -sLO "${BUN_URL}" \
-  && unzip -q "bun-${UNAME}-${ARCH}.zip" -d /opt \
+  && sudo unzip -q "bun-${UNAME}-${ARCH}.zip" -d /opt \
   && rm "bun-${UNAME}-${ARCH}.zip" \
-  && mv /opt/bun-* /opt/bun \
-  && ln -sf /opt/bun/bun /usr/bin/ \
-  && echo 'export PATH="${PATH}:/opt/bun"' >> /etc/profile.d/path-bun.sh ;
+  && sudo mv /opt/bun-* /opt/bun \
+  && sudo ln -sf /opt/bun/bun /usr/bin/ \
+  && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh ;
 
   type bun && echo "@ Version of bun: $(bun -v)" || return $? ;
 }
@@ -194,25 +194,26 @@ setup_GO() {
   && URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
-  && ln -sf /opt/go/bin/go* /usr/bin/ \
-  && echo 'export GOROOT="/opt/go"'       >> /etc/profile.d/path-go.sh \
-  && echo 'export GOBIN="$GOROOT/bin"'    >> /etc/profile.d/path-go.sh \
-  && echo 'export GOPATH="$GOROOT/path"'  >> /etc/profile.d/path-go.sh \
-  && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /etc/profile.d/path-go.sh ;
+  && sudo ln -sf /opt/go/bin/go* /usr/bin/ \
+  && echo 'export GOROOT="/opt/go"'       | sudo tee -a /etc/profile.d/path-go.sh \
+  && echo 'export GOBIN="$GOROOT/bin"'    | sudo tee -a /etc/profile.d/path-go.sh \
+  && echo 'export GOPATH="$GOROOT/path"'  | sudo tee -a /etc/profile.d/path-go.sh \
+  && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' | sudo tee -a /etc/profile.d/path-go.sh ;
   
   type go && echo "@ Version of golang: $(go version)" || return -1 ;
 }
 
 
 setup_rust() {
-     export CARGO_HOME=/opt/cargo \
-  && export RUSTUP_HOME=/opt/rust \
-  && export PATH=$PATH:${CARGO_HOME}/bin \
-  && curl -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable \
-  && echo 'export CARGO_HOME="/opt/cargo"'		>> /etc/profile.d/path-rust.sh \
-  && echo 'export RUSTUP_HOME="/opt/rust"'		>> /etc/profile.d/path-rust.sh \
-  && echo 'export PATH=$PATH:/opt/cargo/bin'	>> /etc/profile.d/path-rust.sh ;
-  
+  curl -sSf https://sh.rustup.rs | sudo sh -c '
+    export CARGO_HOME=/opt/cargo && export RUSTUP_HOME=/opt/rust
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable
+  '
+     echo 'export CARGO_HOME="/opt/cargo"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
+  && echo 'export RUSTUP_HOME="/opt/rust"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
+  && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null ;
+
+  source /etc/profile.d/path-rust.sh
   type rustup && echo "@ Version of rustup: $(rustup --version)" || return -1 ;
   type rustc  && echo "@ Version of rustc:  $(rustc  --version)" || return -1 ;
 }
@@ -223,7 +224,7 @@ setup_R_base() {
   && curl -sL https://cloud.r-project.org/bin/${UNAME}/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
   && echo "deb https://cloud.r-project.org/bin/${UNAME}/ubuntu $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/cran.list \
   && install_apt  /opt/utils/install_list_R_base.apt \
-  && echo "options(repos=structure(c(CRAN=\"https://cloud.r-project.org\")))" >> /etc/R/Rprofile.site \
+  && echo "options(repos=structure(c(CRAN=\"https://cloud.r-project.org\")))" | sudo tee -a /etc/R/Rprofile.site \
   && R -e "install.packages(c('devtools'),clean=T,quiet=T);" \
   && R -e "install.packages(c('devtools'),clean=T,quiet=F);" \
   && ( type java && type R && R CMD javareconf || true ) ;
@@ -233,18 +234,21 @@ setup_R_base() {
 
 
 setup_julia() {
+  VER_JULIA_GET=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha))' | head -n1 | grep -Po '\d[\d.]+' )
+  VER_JULIA=${1:-"${VER_JULIA_GET}"}
+
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH_1=$(uname -m) \
   && ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
-  && VER_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep 'releases/tag' | grep -v 'rc' | head -1 | grep -Po '\d[\d.]+') \
   && VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
   && URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
+  && echo "Downloading Julia version ${VER_JULIA} from: ${URL_JULIA}" \
   && install_tar_gz $URL_JULIA \
-  && mv /opt/julia-* /opt/julia \
-  && ln -fs /opt/julia/bin/julia /usr/bin/julia \
-  && mkdir -p /opt/julia/pkg \
-  && echo "import Libdl; push!(Libdl.DL_LOAD_PATH, \"/opt/conda/lib\")" >> /opt/julia/etc/julia/startup.jl \
-  && echo "DEPOT_PATH[1]=\"/opt/julia/pkg\""                            >> /opt/julia/etc/julia/startup.jl ;
+  && sudo mv /opt/julia-* /opt/julia \
+  && sudo ln -fs /opt/julia/bin/julia /usr/bin/julia \
+  && sudo mkdir -pv /opt/julia/pkg \
+  && echo "import Libdl; push!(Libdl.DL_LOAD_PATH, \"/opt/conda/lib\")" | sudo tee -a /opt/julia/etc/julia/startup.jl \
+  && echo "DEPOT_PATH[1]=\"/opt/julia/pkg\""                            | sudo tee -a /opt/julia/etc/julia/startup.jl ;
   
   type julia && echo "@ Version of Julia: $(julia --version)" || return -1 ;
 }
@@ -255,9 +259,9 @@ setup_lua_base() {
  && URL_LUA="http://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
- && mv /opt/lua-* /tmp/lua && cd /tmp/lua \
- && make linux test && make install INSTALL_TOP=${LUA_HOME:-"/opt/lua"} \
- && ln -sf ${LUA_HOME:-"/opt/lua"}/bin/lua* /usr/bin/ \
+ && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
+ && sudo make linux test && sudo make install INSTALL_TOP=${LUA_HOME:-"/opt/lua"} \
+ && sudo ln -sf ${LUA_HOME:-"/opt/lua"}/bin/lua* /usr/bin/ \
  && rm -rf /tmp/lua ;
 
  type lua && echo "@ Version of LUA installed: $(lua -v)" || return -1 ;
@@ -270,9 +274,9 @@ setup_lua_rocks() {
  && URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
  && install_tar_gz $URL_LUA_ROCKS \
- && mv /opt/luarocks-* /tmp/luarocks && cd /tmp/luarocks \
- && ./configure --prefix=${LUA_HOME:-"/opt/lua"} --with-lua-include=${LUA_HOME:-"/opt/lua"}/include && make install \
- && ln -sf /opt/lua/bin/lua* /usr/bin/ \
+ && sudo mv /opt/luarocks-* /tmp/luarocks && cd /tmp/luarocks \
+ && sudo ./configure --prefix=${LUA_HOME:-"/opt/lua"} --with-lua-include=${LUA_HOME:-"/opt/lua"}/include && sudo make install \
+ && sudo ln -sf /opt/lua/bin/lua* /usr/bin/ \
  && rm -rf /tmp/luarocks ;
 
  type luarocks && echo "@ Version of luarocks: $(luarocks --version)" || return -1 ;
