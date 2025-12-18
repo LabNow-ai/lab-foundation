@@ -69,3 +69,4 @@ jobs:
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
           docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
             python /opt/utils/image-syncer/run_jobs.py --auth-file=/tmp/.github/workflows/auth.json
+              --workflow-file=".github/workflows/build-docker-db.yml"
