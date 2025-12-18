@@ -88,7 +88,7 @@ setup_pg_net() {
     apt-get -qq install -yq --no-install-recommends libcurl4-gnutls-dev postgresql-server-dev-${PG_MAJOR}
     make -j8 && make install
 }
-setup_pg_net
+# setup_pg_net
 
 
 # required to build some extensions

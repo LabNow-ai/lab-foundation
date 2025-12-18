@@ -1,14 +1,15 @@
 % these extensions requries to be listed in shared_preload_libraries
-postgresql-${PG_MAJOR}-citus-12.1
-timescaledb-2-postgresql-${PG_MAJOR}
 postgresql-${PG_MAJOR}-pgvector
 postgresql-${PG_MAJOR}-squeeze
 postgresql-${PG_MAJOR}-pgaudit
 postgresql-${PG_MAJOR}-pg-qualstats
 postgresql-${PG_MAJOR}-auto-failover
+% postgresql-${PG_MAJOR}-citus-12.1
 % pg-net      % installed from source code: https://github.com/supabase/pg_net
+% timescaledb-2-postgresql-${PG_MAJOR}
 
 % the following extensions does NOT requires to be listed in shared_preload_libraries
+libpq-dev
 
 %% postgis
 postgis osm2pgrouting
@@ -69,19 +70,19 @@ postgresql-${PG_MAJOR}-prioritize
 postgresql-${PG_MAJOR}-toastinfo
 postgresql-${PG_MAJOR}-unit
 postgresql-plpython3-${PG_MAJOR}
-pg-auto-failover-cli
-pg-graphql  % https://github.com/supabase/pg_graphql
-pgagroal
-pgpool2
+
 pgbouncer
-pgxnclient
-pgagent
-pgreplay
-pgbackrest
-pgbackrest-doc
-powa-collector
-elephant-shed-pgbackrest
-libpq-dev
-pgbadger
-pgloader
-ora2pg
+# pg-auto-failover-cli
+# pg-graphql  % https://github.com/supabase/pg_graphql
+# pgagroal
+# pgpool2
+# pgxnclient
+# pgagent
+# pgreplay
+# pgbackrest
+# pgbackrest-doc
+# powa-collector
+# elephant-shed-pgbackrest
+# pgbadger
+# pgloader
+# ora2pg
