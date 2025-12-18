@@ -26,13 +26,13 @@ add_apt_source \
 # apt source for: https://packagecloud.io/timescale/timescaledb
 add_apt_source \
   "https://packagecloud.io/timescale/timescaledb/gpgkey" \
-  "timescale_timescaledb.gpg" \
+  "timescale_timescaledb-archive-keyring.gpg" \
   "https://packagecloud.io/install/repositories/timescale/timescaledb/config_file.list?os=${DISTRO_NAME}&dist=${DISTRO_CODE_NAME}&source=script" \
   "timescale_timescaledb.list"
 
 # apt source for: https://packagecloud.io/pigsty/pgsql
 add_apt_source \
   "https://packagecloud.io/pigsty/pgsql/gpgkey" \
-  "pigsty_pgsql.gpg" \
+  "pigsty_pgsql-archive-keyring.gpg" \
   "https://packagecloud.io/install/repositories/pigsty/pgsql/config_file.list?os=${DISTRO_NAME}&dist=${DISTRO_CODE_NAME}&source=script" \
   "pigsty_pgsql.list"
