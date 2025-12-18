@@ -1,4 +1,4 @@
-name: build-docker-images
+name: build-docker-images-db
 
 on:
   push:
