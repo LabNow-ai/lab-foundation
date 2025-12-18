@@ -1,0 +1,87 @@
+% these extensions requries to be listed in shared_preload_libraries
+postgresql-${PG_MAJOR}-citus-12.1
+timescaledb-2-postgresql-${PG_MAJOR}
+postgresql-${PG_MAJOR}-pgvector
+postgresql-${PG_MAJOR}-squeeze
+postgresql-${PG_MAJOR}-pgaudit
+postgresql-${PG_MAJOR}-pg-qualstats
+postgresql-${PG_MAJOR}-auto-failover
+% pg-net      % installed from source code: https://github.com/supabase/pg_net
+
+% the following extensions does NOT requires to be listed in shared_preload_libraries
+
+%% postgis
+postgis osm2pgrouting
+postgresql-${PG_MAJOR}-postgis
+postgresql-${PG_MAJOR}-pgrouting
+postgresql-${PG_MAJOR}-ogr-fdw      % spatial foreign data wrapper that uses GDAL
+
+postgresql-contrib
+postgresql-${PG_MAJOR}-cron
+postgresql-${PG_MAJOR}-wal2json
+postgresql-${PG_MAJOR}-dirtyread
+postgresql-${PG_MAJOR}-extra-window-functions
+postgresql-${PG_MAJOR}-first-last-agg
+postgresql-${PG_MAJOR}-hll
+postgresql-${PG_MAJOR}-hypopg
+postgresql-${PG_MAJOR}-ip4r
+postgresql-${PG_MAJOR}-jsquery
+postgresql-${PG_MAJOR}-pgmemcache
+postgresql-${PG_MAJOR}-pljava
+postgresql-${PG_MAJOR}-pllua
+postgresql-${PG_MAJOR}-plpgsql-check
+postgresql-${PG_MAJOR}-plproxy
+postgresql-${PG_MAJOR}-prefix
+postgresql-${PG_MAJOR}-rational
+postgresql-${PG_MAJOR}-rdkit
+postgresql-${PG_MAJOR}-pg-stat-kcache
+postgresql-${PG_MAJOR}-pg-wait-sampling
+postgresql-${PG_MAJOR}-pgfincore
+postgresql-${PG_MAJOR}-pgpool2
+postgresql-${PG_MAJOR}-pgrouting
+postgresql-${PG_MAJOR}-pgrouting-doc
+postgresql-${PG_MAJOR}-pgrouting-scripts
+postgresql-${PG_MAJOR}-pgsphere
+postgresql-${PG_MAJOR}-pldebugger
+postgresql-${PG_MAJOR}-pointcloud
+postgresql-${PG_MAJOR}-plr
+postgresql-${PG_MAJOR}-powa
+postgresql-${PG_MAJOR}-q3c
+postgresql-${PG_MAJOR}-repack
+postgresql-${PG_MAJOR}-rum
+postgresql-${PG_MAJOR}-show-plans
+postgresql-${PG_MAJOR}-similarity
+postgresql-${PG_MAJOR}-tablelog
+postgresql-${PG_MAJOR}-tdigest
+postgresql-${PG_MAJOR}-plprofiler
+postgresql-${PG_MAJOR}-partman
+postgresql-${PG_MAJOR}-icu-ext
+postgresql-${PG_MAJOR}-orafce
+postgresql-${PG_MAJOR}-mysql-fdw
+postgresql-${PG_MAJOR}-oracle-fdw
+postgresql-${PG_MAJOR}-tds-fdw
+postgresql-${PG_MAJOR}-credcheck
+postgresql-${PG_MAJOR}-decoderbufs
+postgresql-${PG_MAJOR}-mimeo
+postgresql-${PG_MAJOR}-pgmp
+postgresql-${PG_MAJOR}-preprepare
+postgresql-${PG_MAJOR}-prioritize
+postgresql-${PG_MAJOR}-toastinfo
+postgresql-${PG_MAJOR}-unit
+postgresql-plpython3-${PG_MAJOR}
+pg-auto-failover-cli
+pg-graphql  % https://github.com/supabase/pg_graphql
+pgagroal
+pgpool2
+pgbouncer
+pgxnclient
+pgagent
+pgreplay
+pgbackrest
+pgbackrest-doc
+powa-collector
+elephant-shed-pgbackrest
+libpq-dev
+pgbadger
+pgloader
+ora2pg
