@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh
-          build_image_no_tag postgres-17 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:17"
+          build_image_no_tag postgres-17 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:17-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-17     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-17" --build-arg "PYTHON_VERSION=3.12"
           build_image postgres-17-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-17
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           source ./tool.sh
-          build_image_no_tag postgres-16 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:16"
+          build_image_no_tag postgres-16 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:16-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-16     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-16" --build-arg "PYTHON_VERSION=3.12"
           build_image postgres-16-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-16
