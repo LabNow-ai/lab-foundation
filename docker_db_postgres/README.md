@@ -12,6 +12,7 @@ docker run -d \
     -p 15432:5432 \
     -e POSTGRES_DB=sys \
     -e POSTGRES_PASSWORD=postgres \
+    -e PG_CRON_DB=sys \
     quay.io/labnow0dev/postgres-16-ext
 
 docker exec -it db-postgres bash
@@ -27,10 +28,13 @@ ls -alh /usr/share/postgresql/${PG_MAJOR}/extension/*.control
 ## List of Extensions
 
 ```sql
+-- list all enabled extensions
 SELECT extname AS name, extversion AS ver FROM pg_extension ORDER BY extname;
 
+-- list all avaliable extension
 SELECT name, default_version AS ver, comment FROM pg_available_extensions ORDER BY name;
 
+-- list extensions that are available but not enabled
 SELECT name, default_version AS ver FROM pg_available_extensions
 WHERE name NOT IN (SELECT extname AS name FROM pg_extension) ORDER BY name;
 ```

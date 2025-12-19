@@ -30,9 +30,6 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  ## Hack: fix system python / conda python
  && PYTHON_VERSION=$(python -c 'from sys import version_info as v; print("%s.%s" % (v.major, v.minor))') \
  && cp -rf "/opt/conda/lib/python${PYTHON_VERSION}/platform.py.bak" "/opt/conda/lib/python${PYTHON_VERSION}/platform.py" \
- ## configs
- && mkdir -pv ${PGDATA}/conf.d \
- && echo "include_dir='./conf.d'" >> ${PGDATA}/postgresql.conf \
  ## clean up
  && echo "Clean up" && list_installed_packages && install__clean
 

@@ -1,9 +1,13 @@
 #!/bin/bash
-set -euo pipefail
+set -Eeo pipefail
+
+# 0. configs (must be set in the starting stage, initdb will check if data folder is empty)
+mkdir -pv ${PGDATA}/conf.d
+echo "include_dir='./conf.d'" >> ${PGDATA}/postgresql.conf
 
 # 1. dynamically update preload-extensions
 PRELOAD_LIBS="${PG_PRELOAD_LIBS:-pg_cron}"
-CRON_DB="${POSTGRES_DB:-postgres}"
+CRON_DB="${PG_CRON_DB:-postgres}"
 CONF_FILE="${PGDATA}/conf.d/20-preload-extensions.conf"
 
 echo "Configuring shared_preload_libraries in ${CONF_FILE} to: ${PRELOAD_LIBS}"
