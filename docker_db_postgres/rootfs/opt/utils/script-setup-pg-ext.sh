@@ -1,6 +1,3 @@
-echo "To install PG extensions: $(cat /opt/utils/install_list_pgext.apt)"
-install_apt /opt/utils/install_list_pgext.apt
-
 if [ ${PG_MAJOR} != "17" ]; then
     # Fix pgagent for PG 15 / 16
     rm -rf /usr/share/postgresql/${PG_MAJOR}/extension/pgagent*
@@ -28,7 +25,6 @@ setup_pg_search() {
  && wget ${URL_PG_SEARCH} \
  && dpkg -i *.deb
 }
-setup_pg_search
 
 setup_pg_analytics() {
  ## ref: https://github.com/paradedb/pg_analytics
@@ -40,8 +36,6 @@ setup_pg_analytics() {
  && wget ${URL_PG_ANALYTICS} \
  && dpkg -i *.deb
 }
-# setup_pg_analytics
-
 
 setup_apache_age() {
     cd /tmp
@@ -50,8 +44,6 @@ setup_apache_age() {
     apt-get -qq install -yq --no-install-recommends flex bison postgresql-server-dev-${PG_MAJOR}
     make -j8 && make install
 }
-setup_apache_age
-
 
 setup_pgvectorscale() {
  ## ref: https://github.com/timescale/pgvectorscale
@@ -62,8 +54,6 @@ setup_pgvectorscale() {
  && install_zip ${URL_PGVS} && mv /opt/pgvectorscal* /tmp/pgvectorscale/ \
  && dpkg -i *.deb
 }
-setup_pgvectorscale
-
 
 setup_pgroonga(){
     ## ref1: https://pgroonga.github.io/tutorial/
@@ -78,8 +68,6 @@ setup_pgroonga(){
  && apt update && apt install -y -V \
     postgresql-${PG_MAJOR}-pgdg-pgroonga groonga-normalizer-mysql groonga-token-filter-stem groonga-tokenizer-mecab
 }
-setup_pgroonga
-
 
 setup_pg_net() {
     cd /tmp
@@ -88,10 +76,3 @@ setup_pg_net() {
     apt-get -qq install -yq --no-install-recommends libcurl4-gnutls-dev postgresql-server-dev-${PG_MAJOR}
     make -j8 && make install
 }
-# setup_pg_net
-
-
-# required to build some extensions
-apt-get remove -y postgresql-server-dev-${PG_MAJOR}
-
-ls -alh /usr/share/postgresql/*/extension/*.control | sort
