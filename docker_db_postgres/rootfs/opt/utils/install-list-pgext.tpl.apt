@@ -1,22 +1,21 @@
 % these extensions requries to be listed in shared_preload_libraries
-postgresql-${PG_MAJOR}-pgvector
-postgresql-${PG_MAJOR}-squeeze
+postgresql-${PG_MAJOR}-auto-failover
 postgresql-${PG_MAJOR}-pgaudit
 postgresql-${PG_MAJOR}-pg-qualstats
-postgresql-${PG_MAJOR}-auto-failover
+postgresql-${PG_MAJOR}-squeeze
 % postgresql-${PG_MAJOR}-citus-12.1
-% pg-net      % installed from source code: https://github.com/supabase/pg_net
 % timescaledb-2-postgresql-${PG_MAJOR}
 
 % the following extensions does NOT requires to be listed in shared_preload_libraries
 libpq-dev
+pgbouncer
 
 %% postgis
 postgis osm2pgrouting
 postgresql-${PG_MAJOR}-postgis
+
 postgresql-${PG_MAJOR}-pgrouting
 postgresql-${PG_MAJOR}-ogr-fdw      % spatial foreign data wrapper that uses GDAL
-
 postgresql-contrib
 postgresql-${PG_MAJOR}-cron
 postgresql-${PG_MAJOR}-wal2json
@@ -43,6 +42,7 @@ postgresql-${PG_MAJOR}-pgrouting
 postgresql-${PG_MAJOR}-pgrouting-doc
 postgresql-${PG_MAJOR}-pgrouting-scripts
 postgresql-${PG_MAJOR}-pgsphere
+postgresql-${PG_MAJOR}-pgvector
 postgresql-${PG_MAJOR}-pldebugger
 postgresql-${PG_MAJOR}-pointcloud
 postgresql-${PG_MAJOR}-plr
@@ -71,18 +71,18 @@ postgresql-${PG_MAJOR}-toastinfo
 postgresql-${PG_MAJOR}-unit
 postgresql-plpython3-${PG_MAJOR}
 
-pgbouncer
-# pg-auto-failover-cli
-# pg-graphql  % https://github.com/supabase/pg_graphql
-# pgagroal
-# pgpool2
-# pgxnclient
-# pgagent
-# pgreplay
-# pgbackrest
-# pgbackrest-doc
-# powa-collector
-# elephant-shed-pgbackrest
-# pgbadger
-# pgloader
-# ora2pg
+% pg-net      % installed from source code: https://github.com/supabase/pg_net
+% pg-auto-failover-cli
+% pg-graphql  % https://github.com/supabase/pg_graphql
+% pgagroal
+% pgpool2
+% pgxnclient
+% pgagent
+% pgreplay
+% pgbackrest
+% pgbackrest-doc
+% powa-collector
+% elephant-shed-pgbackrest
+% pgbadger
+% pgloader
+% ora2pg

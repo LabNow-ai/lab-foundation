@@ -9,9 +9,10 @@ docker build -t labnow/postgres-16-ext -f ./postgres-ext.Dockerfile --build-arg 
 ( docker stop db-postgres && docker rm db-postgres || true )
 docker run -d \
     --name db-postgres \
-    -p 5432:5432 \
+    -p 15432:5432 \
+    -e POSTGRES_DB=sys \
     -e POSTGRES_PASSWORD=postgres \
-    labnow/postgres-16-ext
+    quay.io/labnow0dev/postgres-16-ext
 
 docker exec -it db-postgres bash
 
