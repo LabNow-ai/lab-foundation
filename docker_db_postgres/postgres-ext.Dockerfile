@@ -1,7 +1,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 ARG BASE_NAMESPACE
-ARG BASE_IMG="postgres-16-bookworm"
+ARG BASE_IMG="postgres-16"
 FROM ${BASE_NAMESPACE:+$BASE_NAMESPACE/}${BASE_IMG}
 
 LABEL maintainer="haobibo@gmail.com"
@@ -23,13 +23,14 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && setup_pgvectorscale \
  && setup_apache_age \
  && setup_pg_net \
- ## required to build some extensions
- && apt-get remove -y postgresql-server-dev-${PG_MAJOR} \
+ && pgxn install pgsodium \
+ ## required to build some extensions and can be removed after install:
+ && apt-get remove -y postgresql-server-dev-${PG_MAJOR} libsodium-dev \
  && ls -alh /usr/share/postgresql/*/extension/*.control | sort \
- ## Hack: fix system python / conda python
+ && echo "Hack: fix system python / conda python" \
  && PYTHON_VERSION=$(python -c 'from sys import version_info as v; print("%s.%s" % (v.major, v.minor))') \
  && cp -rf "/opt/conda/lib/python${PYTHON_VERSION}/platform.py.bak" "/opt/conda/lib/python${PYTHON_VERSION}/platform.py" \
- ## clean up
+ && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \
  && echo "Clean up" && list_installed_packages && install__clean
 
 USER postgres

@@ -1,7 +1,8 @@
 %% Core extensions that REQUIRE shared_preload_libraries (cluster-shape / planner / bgworker level extensions)
 postgresql-${PG_MAJOR}-auto-failover         % automatic HA / failover using background workers
+postgresql-${PG_MAJOR}-cron                  % job scheduler using background worker
 postgresql-${PG_MAJOR}-pgaudit               % SQL audit logging via executor hooks
-postgresql-${PG_MAJOR}-pg-qualstats          % collects WHERE/JOIN predicate statistics
+postgresql-${PG_MAJOR}-pg-stat-kcache        % OS-level CPU/IO stats for queries
 postgresql-${PG_MAJOR}-squeeze               % automatic table bloat reduction (bgworker)
 postgresql-${PG_MAJOR}-citus-13.0            % distributed PostgreSQL extension (planner hook)
 timescaledb-2-postgresql-${PG_MAJOR}         % time-series database extension (planner + bgworker)
@@ -9,7 +10,6 @@ timescaledb-2-postgresql-${PG_MAJOR}         % time-series database extension (p
 
 %% runtime-extensions
 postgresql-contrib                           % official contributed PostgreSQL extensions
-postgresql-${PG_MAJOR}-cron                  % job scheduler using background worker
 
 
 %% SQL language extensions and function libraries (additional SQL operators, aggregates, helpers)
@@ -67,7 +67,7 @@ postgresql-${PG_MAJOR}-tablelog              % table change logging via triggers
 
 
 %% Performance monitoring, diagnostics, and observability (CPU/IO, waits, cache behavior, dashboards)
-postgresql-${PG_MAJOR}-pg-stat-kcache        % OS-level CPU/IO stats for queries
+postgresql-${PG_MAJOR}-pg-qualstats          % collects WHERE/JOIN predicate statistics
 postgresql-${PG_MAJOR}-pg-wait-sampling      % wait event sampling for performance analysis
 postgresql-${PG_MAJOR}-toastinfo             % inspect TOAST storage usage
 postgresql-${PG_MAJOR}-powa                  % performance dashboard (pg_stat_statements based)
@@ -77,7 +77,7 @@ postgresql-${PG_MAJOR}-pgmp                  % management and monitoring utiliti
 %% Query planning, optimization, and execution control (query behavior analysis and tuning)
 postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
 postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
-% postgresql-${PG_MAJOR}-pgfincore             % inspect shared buffer / OS cache residency % TODO: >17 not released yet
+% postgresql-${PG_MAJOR}-pgfincore           % inspect shared buffer / OS cache residency % TODO: >17 not released yet
 
 
 %% Indexing, access methods, and physical data layout (storage, partitioning, and index structures)
@@ -105,19 +105,22 @@ postgresql-${PG_MAJOR}-icu-ext               % ICU-based collations and utilitie
 postgresql-${PG_MAJOR}-dirtyread             % read uncommitted heap tuples (debug/testing)
 
 
+%% encryption, required by pgsodium (https://github.com/michelp/pgsodium), can be removed later on
+libsodium-dev postgresql-server-dev-${PG_MAJOR}
+
+
 %% Core packages that are NOT PostgreSQL extensions (client libraries, pooling, contrib bundle)
-% pgxnclient                     % client for PGXN extension network
-% libpq-dev                      % PostgreSQL client library headers (build-time)
 % pgbouncer                      % lightweight PostgreSQL connection pooler
 % pgagroal                       % advanced PostgreSQL connection pooler
 % pgpool2                        % pooling / replication middleware
+% libpq-dev                      % PostgreSQL client library headers (build-time)
 
 %% External tools, CLIs, and ecosystem utilities (not PostgreSQL extensions, installed separately, often outside the database)
-% pg-auto-failover-cli           % CLI tools for pg_auto_failover
-% pg-graphql                     % GraphQL API layer on top of PostgreSQL (by supabase)
-% pgreplay                       % replay captured PostgreSQL workloads
 % pgbackrest pgbackrest-doc      % backup and restore tool and documentation
 % powa-collector                 % metrics collector for PoWA
 % pgbadger                       % PostgreSQL log analyzer
 % pgloader                       % data loading and migration tool
 % ora2pg                         % Oracle to PostgreSQL migration tool
+% pgreplay                       % replay captured PostgreSQL workloads
+% pg-auto-failover-cli           % CLI tools for pg_auto_failover
+% pg-graphql                     % GraphQL API layer on top of PostgreSQL (by supabase)

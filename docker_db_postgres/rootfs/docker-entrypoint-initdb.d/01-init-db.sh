@@ -14,10 +14,9 @@ echo "Configuring shared_preload_libraries in ${CONF_FILE} to: ${PRELOAD_LIBS}"
 
 cat > "${CONF_FILE}" <<EOF
 # This file is generated at initdb time. Do NOT edit manually!
-#
-# Available preload extensions:
-# citus,timescaledb,pg_search,pg_cron,pgautofailover,pg_qualstats,pg_squeeze,pg_net
-# pg_stat_statements,auto_explain,pg_partman_bgw,pgaudit
+
+# Available preload extensions (if citus is enabled, it MUST be the first one):
+# citus,timescaledb,pg_search,pg_net,pg_cron,pgaudit,pgautofailover,pg_qualstats,pg_squeeze,pg_stat_statements,pg_stat_kcache,auto_explain,pg_partman_bgw
 
 shared_preload_libraries = '${PRELOAD_LIBS}'
 
@@ -31,16 +30,16 @@ ls -alh /usr/share/postgresql/${PG_MAJOR}/extension/*.control
 tail ${PGDATA}/postgresql.conf
 cat ${PGDATA}/conf.d/*
 
-# some ext may requires system restart
 
+# if some ext may requires system restart
 # form `docker-entrypoint.sh`: https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh
-docker_temp_server_stop
-sleep 2s
-docker_temp_server_start
+# docker_temp_server_stop
+# sleep 2s
+# docker_temp_server_start
 
+enable_all_extensions() {
+  psql "$@" -At -c "SELECT name FROM pg_available_extensions WHERE name NOT IN (SELECT extname FROM pg_extension)" |
+  while read e; do psql "$@" -c "CREATE EXTENSION IF NOT EXISTS \"$e\" CASCADE" >/dev/null || echo "Skip $e"; done
+}
 
-psql -v ON_ERROR_STOP=0 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL    
-    SELECT a.name, e.extversion AS installed, a.default_version AS avaliable, a.comment -- e.extowner, e.extnamespace, e.extrelocatable
-    FROM pg_available_extensions AS a LEFT JOIN pg_extension AS e ON a.name = e.extname
-    ORDER BY name;
-EOSQL
+enable_all_extensions -d ${POSTGRES_DB}

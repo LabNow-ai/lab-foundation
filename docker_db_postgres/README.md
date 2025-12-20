@@ -4,15 +4,16 @@
 
 ```shell
 BUILDKIT_PROGRESS=plain \
-docker build -t labnow/postgres-16-ext -f ./postgres-ext.Dockerfile --build-arg BASE_NAMESPACE=labnow .
+docker build -t quay.io/labnow0dev/postgres-16-ext -f ./postgres-ext.Dockerfile --build-arg BASE_NAMESPACE=quay.io/labnow0dev .
 
-( docker stop db-postgres && docker rm db-postgres || true )
+docker rm -f db-postgres || true
 docker run -d \
     --name db-postgres \
     -p 15432:5432 \
     -e POSTGRES_DB=sys \
     -e POSTGRES_PASSWORD=postgres \
     -e PG_CRON_DB=sys \
+    -e PG_PRELOAD_LIBS=citus,timescaledb,pg_search,pg_net,pg_cron,pgaudit,pgautofailover,pg_qualstats,pg_squeeze,pg_stat_statements,pg_stat_kcache,auto_explain,pg_partman_bgw \
     quay.io/labnow0dev/postgres-16-ext
 
 docker exec -it db-postgres bash
@@ -22,22 +23,46 @@ ls -alh /usr/share/postgresql/${PG_MAJOR}/extension/*.control
 
 ## Reference
 
-- article: https://mp.weixin.qq.com/s/CduvvvuUDjqNtvKA1OblAQ
-- code: https://github.com/digoal/postgresql_docker_builder/blob/main/pg14_amd64/1.sh
+- [extension article](https://mp.weixin.qq.com/s/CduvvvuUDjqNtvKA1OblAQ) and [code](https://github.com/digoal/postgresql_docker_builder/blob/main/pg14_amd64/1.sh)
+
+## Enable all extensions
+
+```bash
+enable_all_extensions() {
+  psql "$@" -At -c "SELECT name FROM pg_available_extensions WHERE name NOT IN (SELECT extname FROM pg_extension)" |
+  while read e; do psql "$@" -c "CREATE EXTENSION IF NOT EXISTS \"$e\" CASCADE" >/dev/null || echo "Skip $e"; done
+}
+
+enable_all_extensions -d ${POSTGRES_DB}
+``
 
 ## List of Extensions
 
-```sql
--- list all enabled extensions
-SELECT extname AS name, extversion AS ver FROM pg_extension ORDER BY extname;
+```bash
+# list all enabled extensions
+psql -v ON_ERROR_STOP=0 -d "$POSTGRES_DB" <<-EOSQL
+    SELECT extname AS name, extversion AS ver FROM pg_extension ORDER BY extname;
+EOSQL
 
--- list all avaliable extension
-SELECT name, default_version AS ver, comment FROM pg_available_extensions ORDER BY name;
+# list all avaliable extension
+psql -v ON_ERROR_STOP=0 -d "$POSTGRES_DB" <<-EOSQL
+    SELECT name, default_version AS ver, comment FROM pg_available_extensions ORDER BY name;
+EOSQL
 
--- list extensions that are available but not enabled
-SELECT name, default_version AS ver FROM pg_available_extensions
-WHERE name NOT IN (SELECT extname AS name FROM pg_extension) ORDER BY name;
+# list extensions that are available but not enabled
+psql -v ON_ERROR_STOP=0 -d "$POSTGRES_DB" <<-EOSQL
+    SELECT name, default_version AS ver FROM pg_available_extensions
+    WHERE name NOT IN (SELECT extname AS name FROM pg_extension) ORDER BY name;
+EOSQL
+
+# list all installed extensions
+psql -v ON_ERROR_STOP=0 -d "$POSTGRES_DB" <<-EOSQL
+    SELECT a.name, e.extversion AS installed, a.default_version AS avaliable, a.comment -- e.extowner, e.extnamespace, e.extrelocatable
+    FROM pg_available_extensions AS a LEFT JOIN pg_extension AS e ON a.name = e.extname
+    ORDER BY name;
+EOSQL
 ```
+
 
 |              name              | installed | avaliable |                                                       comment                                                       |
 |--------------------------------|-----------|-----------|---------------------------------------------------------------------------------------------------------------------|
