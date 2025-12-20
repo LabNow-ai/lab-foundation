@@ -9,6 +9,7 @@ LABEL maintainer="haobibo@gmail.com"
 COPY rootfs /
 
 RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext-mirror.sh \
+ && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \ 
  ## Generate a package list based on PG_MAJOR version
  && apt-get update && apt-get install -y gettext \
  && envsubst < /opt/utils/install-list-pgext.tpl.apt > /opt/utils/install-list-pgext.apt \
@@ -30,7 +31,6 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && echo "Hack: fix system python / conda python" \
  && PYTHON_VERSION=$(python -c 'from sys import version_info as v; print("%s.%s" % (v.major, v.minor))') \
  && cp -rf "/opt/conda/lib/python${PYTHON_VERSION}/platform.py.bak" "/opt/conda/lib/python${PYTHON_VERSION}/platform.py" \
- && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \
  && echo "Clean up" && list_installed_packages && install__clean
 
 USER postgres

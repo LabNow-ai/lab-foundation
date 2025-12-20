@@ -33,13 +33,12 @@ cat ${PGDATA}/conf.d/*
 
 # if some ext may requires system restart
 # form `docker-entrypoint.sh`: https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh
-# docker_temp_server_stop
-# sleep 2s
-# docker_temp_server_start
+# docker_temp_server_stop && sleep 2s && docker_temp_server_start
 
 enable_all_extensions() {
   psql "$@" -At -c "SELECT name FROM pg_available_extensions WHERE name NOT IN (SELECT extname FROM pg_extension)" |
   while read e; do psql "$@" -c "CREATE EXTENSION IF NOT EXISTS \"$e\" CASCADE" >/dev/null || echo "Skip $e"; done
 }
 
-enable_all_extensions -d ${POSTGRES_DB}
+# if enabling all extensions, uncomment the following line
+# enable_all_extensions -d ${POSTGRES_DB}
