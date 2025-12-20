@@ -18,9 +18,9 @@ add_apt_source() {
 
 # apt source for: https://packagecloud.io/citusdata/community
 add_apt_source \
-  "https://packagecloud.io/citusdata/community/gpgkey" \
+  "https://repos.citusdata.com/community/gpgkey" \
   "citusdata_community-archive-keyring.gpg" \
-  "https://packagecloud.io/install/repositories/citusdata/community/config_file.list?os=${DISTRO_NAME}&dist=${DISTRO_CODE_NAME}&source=script" \
+  "https://repos.citusdata.com/community/config_file.list?os=${DISTRO_NAME}&dist=${DISTRO_CODE_NAME}&source=script" \
   "citusdata_community.list"
 
 # apt source for: https://packagecloud.io/timescale/timescaledb
