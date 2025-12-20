@@ -6,7 +6,7 @@ mkdir -pv ${PGDATA}/conf.d
 echo "include_dir='./conf.d'" >> ${PGDATA}/postgresql.conf
 
 # 1. dynamically update preload-extensions
-PRELOAD_LIBS="${PG_PRELOAD_LIBS:-pg_cron}"
+PRELOAD_LIBS="${PG_PRELOAD_LIBS:-pg_search}"
 CRON_DB="${PG_CRON_DB:-postgres}"
 CONF_FILE="${PGDATA}/conf.d/20-preload-extensions.conf"
 
@@ -16,8 +16,8 @@ cat > "${CONF_FILE}" <<EOF
 # This file is generated at initdb time. Do NOT edit manually!
 #
 # Available preload extensions:
-# citus,timescaledb,pg_stat_statements,auto_explain,pg_cron,
-# pg_partman_bgw,pgaudit,pgautofailover,pg_qualstats,pg_squeeze
+# citus,timescaledb,pg_search,pg_cron,pgautofailover,pg_qualstats,pg_squeeze,pg_net
+# pg_stat_statements,auto_explain,pg_partman_bgw,pgaudit
 
 shared_preload_libraries = '${PRELOAD_LIBS}'
 
