@@ -10,9 +10,8 @@ COPY rootfs /
 
 RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext-mirror.sh \
  # PG extension managers: pgxman, pgxnclient
- && apt-get update && apt-get install -y pgxman \
+ && apt-get update && apt-get install -y postgresql-server-dev-${PG_MAJOR} pgxman \
  && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \
- ## apt-get update && apt-get install -y libsodium-dev postgresql-server-dev-${PG_MAJOR} \
  ## Generate a package list based on PG_MAJOR version
  && apt-get update && apt-get install -y gettext \
  && envsubst < /opt/utils/install-list-pgext.tpl.apt > /opt/utils/install-list-pgext.apt \
@@ -26,11 +25,11 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && setup_pgroonga \
  && setup_pgvectorscale \
  && setup_apache_age \
- ## && setup_pg_duckdb \
+ && setup_pg_duckdb \
  && setup_pg_net \
  && pgxman install -y --overwrite pgsodium \
  ## required to build some extensions and can be removed after install:
- && apt-get remove -y postgresql-server-dev-${PG_MAJOR} \
+ && apt-get remove -y postgresql-server-dev-${PG_MAJOR} ninja-build \
  && ls -alh /usr/share/postgresql/*/extension/*.control | sort \
  && echo "Hack: fix system python / conda python" \
  && PYTHON_VERSION=$(python -c 'from sys import version_info as v; print("%s.%s" % (v.major, v.minor))') \

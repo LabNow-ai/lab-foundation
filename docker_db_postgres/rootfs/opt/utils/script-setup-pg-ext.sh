@@ -60,11 +60,12 @@ setup_pgroonga(){
 }
 
 setup_pg_duckdb() {
+    # ref: https://github.com/duckdb/pg_duckdb/blob/main/docs/compilation.md
     cd /tmp
     git clone --depth 1 -b main https://github.com/duckdb/pg_duckdb
     cd pg_duckdb
-    apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR}
-    make install
+    apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR} liblz4-dev ninja-build
+    make -j8 && sudo make install
 }
 
 setup_pg_net() {
@@ -72,5 +73,5 @@ setup_pg_net() {
     git clone --depth 1 -b master https://github.com/supabase/pg_net
     cd /tmp/pg_net
     apt-get -qq install -yq --no-install-recommends libcurl4-gnutls-dev postgresql-server-dev-${PG_MAJOR}
-    make -j8 && make install
+    make -j8 && sudo make install
 }

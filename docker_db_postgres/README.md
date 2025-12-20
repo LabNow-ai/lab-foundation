@@ -4,7 +4,8 @@
 
 ```shell
 BUILDKIT_PROGRESS=plain \
-docker build -t quay.io/labnow0dev/postgres-16-ext -f ./postgres-ext.Dockerfile --build-arg BASE_NAMESPACE=quay.io/labnow0dev .
+docker build -t quay.io/labnow0dev/postgres-16-ext -f ./postgres-ext.Dockerfile \
+    --build-arg BASE_NAMESPACE=quay.io/labnow0dev --build-arg BASE_IMG=postgres-17 .
 
 docker rm -f db-postgres || true
 docker run -d \
@@ -14,7 +15,7 @@ docker run -d \
     -e POSTGRES_PASSWORD=postgres \
     -e PG_CRON_DB=sys \
     -e PG_PRELOAD_LIBS=citus,timescaledb,pg_search,pg_net,pg_cron,pgaudit,pgautofailover,pg_qualstats,pg_squeeze,pg_stat_statements,pg_stat_kcache,auto_explain,pg_partman_bgw \
-    quay.io/labnow0dev/postgres-16-ext
+    quay.io/labnow0dev/postgres-17-ext:latest
 
 docker exec -it db-postgres bash
 
