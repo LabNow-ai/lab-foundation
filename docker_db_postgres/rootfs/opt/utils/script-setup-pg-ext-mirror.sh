@@ -16,7 +16,7 @@ add_apt_source() {
   curl -fsSL "$list_url" > "$list_path"
 }
 
-# apt source for: https://packagecloud.io/citusdata/community
+# apt source for: https://www.citusdata.com/download/
 add_apt_source \
   "https://repos.citusdata.com/community/gpgkey" \
   "citusdata_community-archive-keyring.gpg" \

@@ -1,5 +1,4 @@
-%% Core extensions that REQUIRE shared_preload_libraries
-%% (cluster-shape / planner / bgworker level extensions)
+%% Core extensions that REQUIRE shared_preload_libraries (cluster-shape / planner / bgworker level extensions)
 postgresql-${PG_MAJOR}-auto-failover         % automatic HA / failover using background workers
 postgresql-${PG_MAJOR}-pgaudit               % SQL audit logging via executor hooks
 postgresql-${PG_MAJOR}-pg-qualstats          % collects WHERE/JOIN predicate statistics
@@ -11,6 +10,8 @@ timescaledb-2-postgresql-${PG_MAJOR}         % time-series database extension (p
 %% runtime-extensions
 postgresql-contrib                           % official contributed PostgreSQL extensions
 postgresql-${PG_MAJOR}-cron                  % job scheduler using background worker
+
+
 %% SQL language extensions and function libraries (additional SQL operators, aggregates, helpers)
 postgresql-${PG_MAJOR}-extra-window-functions % additional SQL window functions
 postgresql-${PG_MAJOR}-first-last-agg        % first()/last() aggregate functions
@@ -33,6 +34,8 @@ postgresql-${PG_MAJOR}-pgrouting-scripts     % helper scripts for pgRouting
 postgresql-${PG_MAJOR}-pgsphere              % spherical geometry types and operators
 postgresql-${PG_MAJOR}-pointcloud            % LiDAR / point cloud data support
 postgresql-${PG_MAJOR}-q3c                   % fast spherical coordinate indexing
+
+
 %% Analytical data types and approximate algorithms (probabilistic analytics and numeric extensions)
 postgresql-${PG_MAJOR}-hll                   % HyperLogLog probabilistic distinct counting
 postgresql-${PG_MAJOR}-tdigest               % approximate percentile aggregation
@@ -53,7 +56,8 @@ postgresql-plpython3-${PG_MAJOR}             % Python 3 procedural language
 postgresql-${PG_MAJOR}-plpgsql-check         % static analyzer for PL/pgSQL functions
 postgresql-${PG_MAJOR}-pldebugger            % debugger for PL/pgSQL and other PLs
 postgresql-${PG_MAJOR}-plprofiler            % PL/pgSQL function profiler
-postgresql-${PG_MAJOR}-pljava                % Java procedural language for PostgreSQL % TODO: >17 not released yet
+% postgresql-${PG_MAJOR}-pljava              % Java procedural language for PostgreSQL % >17 not released yet
+
 
 %% Logical replication, decoding, and change data capture (CDC) (streaming data changes to external systems)
 postgresql-${PG_MAJOR}-wal2json              % logical decoding output plugin (JSON)
@@ -68,10 +72,13 @@ postgresql-${PG_MAJOR}-pg-wait-sampling      % wait event sampling for performan
 postgresql-${PG_MAJOR}-toastinfo             % inspect TOAST storage usage
 postgresql-${PG_MAJOR}-powa                  % performance dashboard (pg_stat_statements based)
 postgresql-${PG_MAJOR}-pgmp                  % management and monitoring utilities
+
+
 %% Query planning, optimization, and execution control (query behavior analysis and tuning)
 postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
 postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
-postgresql-${PG_MAJOR}-pgfincore             % inspect shared buffer / OS cache residency % TODO: >17 not released yet
+% postgresql-${PG_MAJOR}-pgfincore             % inspect shared buffer / OS cache residency % TODO: >17 not released yet
+
 
 %% Indexing, access methods, and physical data layout (storage, partitioning, and index structures)
 postgresql-${PG_MAJOR}-repack                % online table/index reorganization
@@ -88,23 +95,27 @@ postgresql-${PG_MAJOR}-pgpool2               % middleware for pooling / replicat
 
 %% Security, authentication, and policy enforcement (password and access control helpers)
 postgresql-${PG_MAJOR}-credcheck             % password strength checking
+
+
 %% Internationalization and collation support (Unicode and locale-aware sorting)
 postgresql-${PG_MAJOR}-icu-ext               % ICU-based collations and utilities
+
+
 %% Debugging, unsafe inspection, and testing tools (should never be enabled on production OLTP)
 postgresql-${PG_MAJOR}-dirtyread             % read uncommitted heap tuples (debug/testing)
 
 
 %% Core packages that are NOT PostgreSQL extensions (client libraries, pooling, contrib bundle)
-libpq-dev                                    % PostgreSQL client library headers (build-time)
-pgbouncer                                    % lightweight PostgreSQL connection pooler
-% pgagroal                                   % advanced PostgreSQL connection pooler
-% pgpool2                                    % pooling / replication middleware
+% pgxnclient                     % client for PGXN extension network
+% libpq-dev                      % PostgreSQL client library headers (build-time)
+% pgbouncer                      % lightweight PostgreSQL connection pooler
+% pgagroal                       % advanced PostgreSQL connection pooler
+% pgpool2                        % pooling / replication middleware
 
 %% External tools, CLIs, and ecosystem utilities (not PostgreSQL extensions, installed separately, often outside the database)
 % pg-net                         % HTTP client / webhook calls from SQL (Supabase)
 % pg-auto-failover-cli           % CLI tools for pg_auto_failover
 % pg-graphql                     % GraphQL API layer on top of PostgreSQL
-% pgxnclient                     % client for PGXN extension network
 % pgagent                        % job scheduler (older, pgAdmin based)
 % pgreplay                       % replay captured PostgreSQL workloads
 % pgbackrest pgbackrest-doc      % backup and restore tool and documentation

@@ -19,11 +19,10 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  ## Install extensions: install ext that need to be installed manually
  && source /opt/utils/script-setup-pg-ext.sh \
  && setup_pg_search \
- # && setup_pg_analytics \
- && setup_apache_age \
- && setup_pgvectorscale \
  && setup_pgroonga \
- # && setup_pg_net \
+ && setup_pgvectorscale \
+ && setup_apache_age \
+ && setup_pg_net \
  ## required to build some extensions
  && apt-get remove -y postgresql-server-dev-${PG_MAJOR} \
  && ls -alh /usr/share/postgresql/*/extension/*.control | sort \

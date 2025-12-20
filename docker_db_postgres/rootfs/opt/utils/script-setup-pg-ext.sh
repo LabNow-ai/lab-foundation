@@ -15,7 +15,7 @@ export USE_PGXS=1
 
 
 setup_pg_search() {
- ## ref1: https://docs.paradedb.com/deploy/self-hosted/extensions
+ ## ref1: https://docs.paradedb.com/deploy/self-hosted/extension
  ## ref2: https://github.com/paradedb/paradedb
     ARCH="amd64" \
  && VER_PG_SEARCH=$(curl -sL https://github.com/paradedb/paradedb/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
@@ -26,16 +26,6 @@ setup_pg_search() {
  && dpkg -i *.deb
 }
 
-setup_pg_analytics() {
- ## ref: https://github.com/paradedb/pg_analytics
-    ARCH="amd64" \
- && VER_PG_ANALYTICS=$(curl -sL https://github.com/paradedb/pg_analytics/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
- && URL_PG_ANALYTICS="https://github.com/paradedb/pg_analytics/releases/download/v${VER_PG_ANALYTICS}/postgresql-${PG_MAJOR}-pg-analytics_${VER_PG_ANALYTICS}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
- && echo "Downloading pg_analytics ${VER_PG_ANALYTICS} from: ${URL_PG_ANALYTICS}" \
- && mkdir -pv /tmp/pg_analytics/ && cd /tmp/pg_analytics \
- && wget ${URL_PG_ANALYTICS} \
- && dpkg -i *.deb
-}
 
 setup_apache_age() {
     cd /tmp
