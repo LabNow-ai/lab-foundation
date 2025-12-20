@@ -57,7 +57,7 @@ jobs:
           push_image postgres-
 
   job-postgres-18:
-    name: 'postgres-18,postgres-18-ext'
+    name: 'postgres-18'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

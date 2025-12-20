@@ -113,14 +113,11 @@ postgresql-${PG_MAJOR}-dirtyread             % read uncommitted heap tuples (deb
 % pgpool2                        % pooling / replication middleware
 
 %% External tools, CLIs, and ecosystem utilities (not PostgreSQL extensions, installed separately, often outside the database)
-% pg-net                         % HTTP client / webhook calls from SQL (Supabase)
 % pg-auto-failover-cli           % CLI tools for pg_auto_failover
-% pg-graphql                     % GraphQL API layer on top of PostgreSQL
-% pgagent                        % job scheduler (older, pgAdmin based)
+% pg-graphql                     % GraphQL API layer on top of PostgreSQL (by supabase)
 % pgreplay                       % replay captured PostgreSQL workloads
 % pgbackrest pgbackrest-doc      % backup and restore tool and documentation
 % powa-collector                 % metrics collector for PoWA
-% elephant-shed-pgbackrest       % helper tooling for pgBackRest
 % pgbadger                       % PostgreSQL log analyzer
 % pgloader                       % data loading and migration tool
 % ora2pg                         % Oracle to PostgreSQL migration tool
