@@ -14,13 +14,16 @@ docker run -d \
     -e POSTGRES_DB=sys \
     -e POSTGRES_PASSWORD=postgres \
     -e PG_CRON_DB=sys \
-    -e PG_PRELOAD_LIBS=citus,timescaledb,pg_search,pg_net,pg_cron,pgaudit,pgautofailover,pg_qualstats,pg_squeeze,pg_stat_statements,pg_stat_kcache,auto_explain,pg_partman_bgw \
+    -e PG_PRELOAD_LIBS=pg_duckdb,pg_search,pg_cron \
     quay.io/labnow0dev/postgres-17-ext:latest
 
 docker exec -it db-postgres bash
 
 ls -alh /usr/share/postgresql/${PG_MAJOR}/extension/*.control
 ```
+
+`PG_PRELOAD_LIBS` can be chosen from the following available preload extensions (if `citus` is enabled, it MUST be the first one):
+`citus,timescaledb,pg_duckdb,pg_search,pg_cron,pg_net,pgaudit,pgautofailover,pg_qualstats,pg_squeeze,pg_stat_statements,pg_stat_kcache,auto_explain,pg_partman_bgw` .
 
 ## Reference
 
