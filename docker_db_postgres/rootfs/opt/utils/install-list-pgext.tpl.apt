@@ -7,21 +7,23 @@ postgresql-${PG_MAJOR}-squeeze               % automatic table bloat reduction (
 % postgresql-${PG_MAJOR}-citus-12.1          % distributed PostgreSQL extension (planner hook)
 % timescaledb-2-postgresql-${PG_MAJOR}       % time-series database extension (planner + bgworker)
 
-%% Core packages that are NOT PostgreSQL extensions
-%% (client libraries, pooling, contrib bundle)
-libpq-dev                                    % PostgreSQL client library headers (build-time)
-pgbouncer                                    % lightweight PostgreSQL connection pooler
-% pgagroal                                   % advanced PostgreSQL connection pooler
+
+%% runtime-extensions
 postgresql-contrib                           % official contributed PostgreSQL extensions
-% pg-auto-failover-cli                       % CLI tools for pg_auto_failover
-% pgpool2                                    % pooling / replication middleware
-
-%% Job scheduling, automation, and background execution
-%% (time-based or automated database tasks)
 postgresql-${PG_MAJOR}-cron                  % job scheduler using background worker
+%% SQL language extensions and function libraries (additional SQL operators, aggregates, helpers)
+postgresql-${PG_MAJOR}-extra-window-functions % additional SQL window functions
+postgresql-${PG_MAJOR}-first-last-agg        % first()/last() aggregate functions
+postgresql-${PG_MAJOR}-similarity            % string similarity functions
+postgresql-${PG_MAJOR}-prefix                % prefix/range matching utilities
+postgresql-${PG_MAJOR}-unit                  % unit testing framework for SQL
+postgresql-${PG_MAJOR}-orafce                % Oracle compatibility functions
+postgresql-${PG_MAJOR}-jsquery               % JSONB query language with indexing support
+postgresql-${PG_MAJOR}-preprepare            % server-side prepared statement control
+postgresql-${PG_MAJOR}-prioritize            % query prioritization framework
 
-%% Vector, scientific, spatial, and domain-specific extensions
-%% (AI, GIS, chemistry, scientific computing)
+
+%% Vector, scientific, spatial, and domain-specific extensions (AI, GIS, chemistry, scientific computing)
 postgresql-${PG_MAJOR}-pgvector              % vector data type and similarity search
 postgresql-${PG_MAJOR}-rdkit                 % cheminformatics cartridge (chemistry)
 postgresql-${PG_MAJOR}-postgis               % spatial types, indexes, and GIS functions
@@ -33,15 +35,15 @@ postgresql-${PG_MAJOR}-pgsphere              % spherical geometry types and oper
 postgresql-${PG_MAJOR}-pointcloud            % LiDAR / point cloud data support
 postgresql-${PG_MAJOR}-q3c                   % fast spherical coordinate indexing
 
-%% Foreign Data Wrappers (FDW)
-%% (cross-database and external data access)
+
+%% Foreign Data Wrappers (FDW) (cross-database and external data access)
 postgresql-${PG_MAJOR}-mysql-fdw             % foreign data wrapper for MySQL
 postgresql-${PG_MAJOR}-oracle-fdw            % foreign data wrapper for Oracle
 postgresql-${PG_MAJOR}-tds-fdw               % foreign data wrapper for MSSQL / Sybase
 postgresql-${PG_MAJOR}-ogr-fdw               % FDW for spatial data via GDAL
 
-%% Procedural languages and language tooling
-%% (user-defined functions and language runtimes)
+
+%% Procedural languages and language tooling (user-defined functions and language runtimes)
 postgresql-${PG_MAJOR}-pljava                % Java procedural language for PostgreSQL
 postgresql-${PG_MAJOR}-pllua                 % Lua procedural language
 postgresql-${PG_MAJOR}-plr                   % R procedural language integration
@@ -49,74 +51,64 @@ postgresql-plpython3-${PG_MAJOR}             % Python 3 procedural language
 postgresql-${PG_MAJOR}-plpgsql-check         % static analyzer for PL/pgSQL functions
 postgresql-${PG_MAJOR}-pldebugger            % debugger for PL/pgSQL and other PLs
 postgresql-${PG_MAJOR}-plprofiler            % PL/pgSQL function profiler
-postgresql-${PG_MAJOR}-orafce                % Oracle compatibility functions
-postgresql-${PG_MAJOR}-jsquery               % JSONB query language with indexing support
 
-%% Logical replication, decoding, and change data capture (CDC)
-%% (streaming data changes to external systems)
+
+%% Logical replication, decoding, and change data capture (CDC) (streaming data changes to external systems)
 postgresql-${PG_MAJOR}-wal2json              % logical decoding output plugin (JSON)
 postgresql-${PG_MAJOR}-decoderbufs           % logical decoding output plugin (protobuf)
 postgresql-${PG_MAJOR}-mimeo                 % table replication and data sync tools
 postgresql-${PG_MAJOR}-tablelog              % table change logging via triggers
 
-%% Query planning, optimization, and execution control
-%% (query behavior analysis and tuning)
-postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
-postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
-postgresql-${PG_MAJOR}-preprepare            % server-side prepared statement control
-postgresql-${PG_MAJOR}-prioritize            % query prioritization framework
 
-%% Performance monitoring, diagnostics, and observability
-%% (CPU/IO, waits, cache behavior, dashboards)
+%% Performance monitoring, diagnostics, and observability (CPU/IO, waits, cache behavior, dashboards)
 postgresql-${PG_MAJOR}-pg-stat-kcache        % OS-level CPU/IO stats for queries
 postgresql-${PG_MAJOR}-pg-wait-sampling      % wait event sampling for performance analysis
 postgresql-${PG_MAJOR}-pgfincore             % inspect shared buffer / OS cache residency
 postgresql-${PG_MAJOR}-toastinfo             % inspect TOAST storage usage
 postgresql-${PG_MAJOR}-powa                  % performance dashboard (pg_stat_statements based)
 postgresql-${PG_MAJOR}-pgmp                  % management and monitoring utilities
+%% Query planning, optimization, and execution control (query behavior analysis and tuning)
+postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
+postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
 
-%% Analytical data types and approximate algorithms
-%% (probabilistic analytics and numeric extensions)
+
+%% Indexing, access methods, and physical data layout (storage, partitioning, and index structures)
+postgresql-${PG_MAJOR}-repack                % online table/index reorganization
+postgresql-${PG_MAJOR}-partman               % partition management framework
+postgresql-${PG_MAJOR}-rum                   % advanced inverted index access method
+%% Analytical data types and approximate algorithms (probabilistic analytics and numeric extensions)
 postgresql-${PG_MAJOR}-hll                   % HyperLogLog probabilistic distinct counting
 postgresql-${PG_MAJOR}-tdigest               % approximate percentile aggregation
 postgresql-${PG_MAJOR}-rational              % rational number data type
-postgresql-${PG_MAJOR}-unit                  % unit testing framework for SQL
 
-%% SQL language extensions and function libraries
-%% (additional SQL operators, aggregates, helpers)
-postgresql-${PG_MAJOR}-extra-window-functions % additional SQL window functions
-postgresql-${PG_MAJOR}-first-last-agg        % first()/last() aggregate functions
-postgresql-${PG_MAJOR}-similarity            % string similarity functions
-postgresql-${PG_MAJOR}-prefix                % prefix/range matching utilities
 
-%% Indexing, access methods, and physical data layout
-%% (storage, partitioning, and index structures)
-postgresql-${PG_MAJOR}-rum                   % advanced inverted index access method
-postgresql-${PG_MAJOR}-repack                % online table/index reorganization
-postgresql-${PG_MAJOR}-partman               % partition management framework
-
-%% Networking, sharding helpers, and cache integration
-%% (distributed access and external cache interaction)
+%% Networking, sharding helpers, and cache integration (distributed access and external cache interaction)
 postgresql-${PG_MAJOR}-ip4r                  % IPv4/IPv6 range data types and operators
 postgresql-${PG_MAJOR}-pgmemcache            % Memcached client functions
 postgresql-${PG_MAJOR}-plproxy               % database proxy for sharded setups
 postgresql-${PG_MAJOR}-pgpool2               % middleware for pooling / replication
 
-%% Security, authentication, and policy enforcement
-%% (password and access control helpers)
+
+%% Security, authentication, and policy enforcement (password and access control helpers)
 postgresql-${PG_MAJOR}-credcheck             % password strength checking
-
-%% Internationalization and collation support
-%% (Unicode and locale-aware sorting)
+%% Internationalization and collation support (Unicode and locale-aware sorting)
 postgresql-${PG_MAJOR}-icu-ext               % ICU-based collations and utilities
-
-%% Debugging, unsafe inspection, and testing tools
-%% (should never be enabled on production OLTP)
+%% Debugging, unsafe inspection, and testing tools (should never be enabled on production OLTP)
 postgresql-${PG_MAJOR}-dirtyread             % read uncommitted heap tuples (debug/testing)
+
+
+
+
+%% Core packages that are NOT PostgreSQL extensions (client libraries, pooling, contrib bundle)
+libpq-dev                                    % PostgreSQL client library headers (build-time)
+pgbouncer                                    % lightweight PostgreSQL connection pooler
+% pgagroal                                   % advanced PostgreSQL connection pooler
+% pgpool2                                    % pooling / replication middleware
 
 %% External tools, CLIs, and ecosystem utilities (not PostgreSQL extensions)
 %% (installed separately, often outside the database)
 % pg-net                         % HTTP client / webhook calls from SQL (Supabase)
+% pg-auto-failover-cli           % CLI tools for pg_auto_failover
 % pg-graphql                     % GraphQL API layer on top of PostgreSQL
 % pgxnclient                     % client for PGXN extension network
 % pgagent                        % job scheduler (older, pgAdmin based)

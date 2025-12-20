@@ -38,6 +38,7 @@ jobs:
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          push_image postgres-
           build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
           push_image postgres-
 
@@ -51,6 +52,7 @@ jobs:
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          push_image postgres-
           build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
           push_image postgres-
 
@@ -64,6 +66,7 @@ jobs:
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          push_image postgres-
           build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
           push_image postgres-
 
