@@ -43,8 +43,6 @@ install_mvn() { cat $1 | cut -d "%" -f 1 | xargs -r -n1 -I {} mvn dependency:cop
 # function to clean up
 install__clean(){
   which apt-get && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
-  # dpkg -l '*-dev' | awk '/^ii/ {print $2}'
-  dpkg -l '*-dev' | awk '/^ii/ {print $2}' | xargs -r apt-get purge -y
   which mamba   && mamba clean -ya && rm -rf ~/micromamba
   which conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true )
   find "${CONDA_PREFIX:-/opt/conda}"/lib | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
