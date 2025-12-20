@@ -62,7 +62,7 @@ setup_pgroonga(){
 setup_pg_duckdb() {
     # ref: https://github.com/duckdb/pg_duckdb/blob/main/docs/compilation.md
     cd /tmp
-    git clone --depth 1 -b main https://github.com/duckdb/pg_duckdb
+    git clone --depth 1 --recurse-submodules -b main https://github.com/duckdb/pg_duckdb
     cd pg_duckdb
     apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR} liblz4-dev ninja-build
     make -j8 && sudo make install
