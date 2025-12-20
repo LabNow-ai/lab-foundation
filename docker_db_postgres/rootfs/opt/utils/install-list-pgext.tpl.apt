@@ -105,10 +105,6 @@ postgresql-${PG_MAJOR}-icu-ext               % ICU-based collations and utilitie
 postgresql-${PG_MAJOR}-dirtyread             % read uncommitted heap tuples (debug/testing)
 
 
-%% encryption, required by pgsodium (https://github.com/michelp/pgsodium), can be removed later on
-libsodium-dev postgresql-server-dev-${PG_MAJOR}
-
-
 %% Core packages that are NOT PostgreSQL extensions (client libraries, pooling, contrib bundle)
 % pgbouncer                      % lightweight PostgreSQL connection pooler
 % pgagroal                       % advanced PostgreSQL connection pooler

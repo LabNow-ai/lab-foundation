@@ -16,6 +16,12 @@ add_apt_source() {
   curl -fsSL "$list_url" > "$list_path"
 }
 
+# pgxman-cli
+ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')
+curl -fsSL https://apt.pgxman.com/pgxman-keyring.gpg | gpg --dearmor | sudo tee ${APT_KEYRING_DIR}/pgxman-cli.gpg > /dev/null
+echo "deb [arch=${ARCH} signed-by=${APT_KEYRING_DIR}/pgxman-cli.gpg] https://apt.pgxman.com/cli stable main" | sudo tee ${APT_SOURCE_DIR}/pgxman-cli.list >/dev/null
+
+
 # apt source for: https://www.citusdata.com/download/
 add_apt_source \
   "https://repos.citusdata.com/community/gpgkey" \

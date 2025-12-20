@@ -59,6 +59,14 @@ setup_pgroonga(){
     postgresql-${PG_MAJOR}-pgdg-pgroonga groonga-normalizer-mysql groonga-token-filter-stem groonga-tokenizer-mecab
 }
 
+setup_pg_duckdb() {
+    cd /tmp
+    git clone --depth 1 -b main https://github.com/duckdb/pg_duckdb
+    cd pg_duckdb
+    apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR}
+    make install
+}
+
 setup_pg_net() {
     cd /tmp
     git clone --depth 1 -b master https://github.com/supabase/pg_net
