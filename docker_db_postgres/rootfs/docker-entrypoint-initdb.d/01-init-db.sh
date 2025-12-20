@@ -31,7 +31,7 @@ ls -alh /usr/share/postgresql/${PG_MAJOR}/extension/*.control
 tail ${PGDATA}/postgresql.conf
 cat ${PGDATA}/conf.d/*
 
-# pg_analytics and some ext may requires system restart
+# some ext may requires system restart
 
 # form `docker-entrypoint.sh`: https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh
 docker_temp_server_stop
