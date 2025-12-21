@@ -1,0 +1,88 @@
+name: build-docker-images-db
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore: [ "*.md" ]
+
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore: [ "*.md" ]
+
+  workflow_dispatch:  # Allows you to run this workflow manually from the Actions tab
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
+  REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
+  REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
+  # DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD is required for docker image push, they should be set in CI secrets.
+  DOCKER_REGISTRY_USERNAME: ${{ vars.DOCKER_REGISTRY_USERNAME }}
+  DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+  # used to sync image to mirror registry
+  DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
+  DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
+  CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+
+jobs:
+  job-postgres-17:
+    name: 'postgres-17,postgres-17-ext'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          source ./tool.sh && export PG_MAJOR=17
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
+          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
+          build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          push_image postgres-
+          build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
+          push_image postgres-
+
+  job-postgres-16:
+    name: 'postgres-16,postgres-16-ext'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          source ./tool.sh && export PG_MAJOR=16
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
+          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
+          build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          push_image postgres-
+          build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
+          push_image postgres-
+
+  job-postgres-18:
+    name: 'postgres-18'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          source ./tool.sh && export PG_MAJOR=18
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
+          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
+          build_image postgres-${PG_MAJOR}     latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.12"
+          echo "Skip PG 18-ext build as many extension are not yet available for PG 18..."
+          push_image postgres-
+
+
+  ## Sync all images in this build (listed by "names") to mirror registry.
+  sync_images:
+    needs: ["job-postgres-17", "job-postgres-16", "job-postgres-18"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
+          DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
+        run: |
+          source ./tool.sh
+          printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
+          printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
+          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
+            python /opt/utils/image-syncer/run_jobs.py --auth-file=/tmp/.github/workflows/auth.json \
+              --workflow-file=".github/workflows/build-docker-db.yml"

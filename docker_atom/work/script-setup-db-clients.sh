@@ -45,9 +45,9 @@ setup_oracle_client() {
   ARCH=$(uname -m)
   case "$ARCH" in
     x86_64)
-      OARCH="x86-64" ; PKG_ARCH="x64" ;;
+      OARCH="x86-64" ; PKG_ARCH="x64" ; LDAIO="/usr/lib/x86_64-linux-gnu" ;;
     aarch64|arm64)
-      OARCH="arm-aarch64" ; PKG_ARCH="arm64" ;;
+      OARCH="arm-aarch64" ; PKG_ARCH="arm64" ; LDAIO="/usr/lib/aarch64-linux-gnu" ;;
     *)
       echo "!! Unsupported arch: $ARCH" ; return 1 ;;
   esac

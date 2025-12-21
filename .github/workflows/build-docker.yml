@@ -215,25 +215,6 @@ jobs:
             --build-arg "ARG_PROFILE_RUST=base"
           push_image full-stack
 
-  ## Postgres
-  job-postgres:
-    name: 'postgres-17,postgres-16,postgres-15'
-    needs: ["job-base"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          source ./tool.sh
-          build_image_no_tag postgres-17 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:17"
-          build_image_no_tag postgres-16 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:16"
-          build_image_no_tag postgres-15 latest docker_atom/Dockerfile --build-arg "BASE_IMG=postgres:15"
-
-          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image postgres-17 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-17" --build-arg "PYTHON_VERSION=3.12"
-          build_image postgres-16 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-16" --build-arg "PYTHON_VERSION=3.12"
-          build_image postgres-15 latest docker_base/Dockerfile --build-arg "BASE_IMG=postgres-15" --build-arg "PYTHON_VERSION=3.12"
-          push_image postgres-
-
   ## DockerKit - including image-syncer and docker-compsoe
   job-docker_kit:
     name: 'docker-kit'
@@ -254,7 +235,7 @@ jobs:
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   sync_images:
-    needs: ["job-docker_kit", "job-postgres", "job-full-stack", "job-core"]
+    needs: ["job-docker_kit", "job-full-stack", "job-core"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
