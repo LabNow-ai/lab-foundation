@@ -27,7 +27,7 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && setup_apache_age \
  && setup_pg_duckdb \
  && setup_pg_net \
- && pgxman install -y --overwrite pgsodium \
+ ## && pgxman install -y --overwrite pgsodium \
  ## required to build some extensions and can be removed after install:
  && apt-get remove -y postgresql-server-dev-${PG_MAJOR} ninja-build \
  && ls -alh /usr/share/postgresql/*/extension/*.control | sort \
@@ -35,7 +35,7 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && PYTHON_VERSION=$(python -c 'from sys import version_info as v; print("%s.%s" % (v.major, v.minor))') \
  && cp -rf "/opt/conda/lib/python${PYTHON_VERSION}/platform.py.bak" "/opt/conda/lib/python${PYTHON_VERSION}/platform.py" \
  ## && dpkg -l '*-dev' | awk '/^ii/ {print $2}' | xargs -r apt-get purge -y \
- && echo "Clean up" && install__clean && list_installed_packages
+ && echo "Clean up" && cd /var/lib/postgresql && install__clean && list_installed_packages
 
 USER postgres
 WORKDIR /var/lib/postgresql
