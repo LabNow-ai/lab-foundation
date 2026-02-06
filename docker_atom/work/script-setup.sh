@@ -303,3 +303,18 @@ setup_gradle() {
   
   type gradle && echo "@ Version of gradle: $(gradle --version)" || return -1 ;
 }
+
+
+setup_yq() {
+  ARCH=$(uname -m) ; ARCH=${ARCH/x86_64/amd64} ; ARCH=${ARCH/aarch64/arm64} ; ARCH=${ARCH/armv7l/arm} ;
+  [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
+     VER=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
+  && URL="https://github.com/mikefarah/yq/releases/download/v${VER}/yq_linux_${ARCH}" \
+  && echo "Installing yq v${VER} for arch ${ARCH} from: ${URL}" \
+  && curl -fSL "${URL}" -o /tmp/yq \
+  && install -m 0755 -D /tmp/yq /opt/bin/yq \
+  && ln -sf /opt/bin/yq /usr/bin/yq \
+  && rm -f /tmp/yq
+
+  type yq && echo "@ Installed yq: $(yq --version)"
+}
