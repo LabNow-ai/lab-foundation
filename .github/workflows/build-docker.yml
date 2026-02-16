@@ -67,7 +67,7 @@ jobs:
             --build-arg "ARG_PROFILE_NODEJS=base" \
             --build-arg "ARG_PROFILE_JAVA=base,maven" \
             --build-arg "ARG_PROFILE_LATEX=base,cjk"
-          push_image core
+          push_image
 
   job-py-data:
     name: 'py-data'
@@ -172,7 +172,7 @@ jobs:
           build_image go       latest docker_core/Dockerfile --build-arg "ARG_PROFILE_GO=base"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image go-stack latest docker_core/Dockerfile --build-arg "ARG_PROFILE_GO=base" --build-arg "ARG_PROFILE_NODEJS=base"
-          push_image go
+          push_image
 
   job-rust:
     name: 'rust'
