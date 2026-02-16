@@ -306,12 +306,12 @@ setup_gradle() {
 
 
 setup_yq() {
-  ARCH=$(uname -m) ; ARCH=${ARCH/x86_64/amd64} ; ARCH=${ARCH/aarch64/arm64} ; ARCH=${ARCH/armv7l/arm} ;
+  ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
-     VER=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
-  && URL="https://github.com/mikefarah/yq/releases/download/v${VER}/yq_linux_${ARCH}" \
-  && echo "Installing yq v${VER} for arch ${ARCH} from: ${URL}" \
-  && curl -fSL "${URL}" -o /tmp/yq \
+     VER_YQ=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
+  && URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
+  && echo "Installing yq v${VER_YQ} for arch ${ARCH} from: ${URL_YQ}" \
+  && curl -fSL "${URL_YQ}" -o /tmp/yq \
   && install -m 0755 -D /tmp/yq /opt/bin/yq \
   && ln -sf /opt/bin/yq /usr/bin/yq \
   && rm -f /tmp/yq

@@ -60,7 +60,7 @@ alias_image() {
 push_image() {
     KEYWORD="${1:-second}";
     docker image prune --force && docker images | sort;
-    IMAGES=$(docker images | grep "${KEYWORD}" | awk '{print $1 ":" $2}') ;
+    IMAGES=$(docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedSince}}" | grep "${KEYWORD}" | awk '{print $1 ":" $2}') ;
     echo "$DOCKER_REGISTRY_PASSWORD" | docker login "${REGISTRY_DST}" -u "$DOCKER_REGISTRY_USERNAME" --password-stdin ;
     for IMG in $(echo "${IMAGES}" | tr " " "\n") ;
     do
