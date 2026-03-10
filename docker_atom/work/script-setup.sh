@@ -99,22 +99,21 @@ setup_nvtop() {
 
 setup_java_base() {
   ## 23, 21(LTS); 17, 11, 8
+  ## Use the first arg and then VERSION_JDK to specify JDK major version. If not specified, will try the latest.
 
-  local VER_JDK=${VERSION_JDK:-"11"}
-  ARCH=$(uname -m | sed -e 's/x86_64/x64/')
-  IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false)
-
-  echo "Use env var VERSION_JDK to specify JDK major version. If not specified, will install version 11 by default."
-  echo "Will install JDK version ${VER_JDK}"
-
-     PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/" \
-  && URL_JDK_ORCA=$(curl -sL $PAGE_JDK_DOWNLOAD | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
-  && VER_JDK_MINOR=$(echo $URL_JDK_ORCA | grep -Po '[\d\.]{3,}' | head -n1)
-
-  if [ "$VER_JDK" -gt 20 ] ; then
-    URL_JDK_DOWNLOAD=${URL_JDK_ORCA}
+  local VER_JDK_MAJOR="${1:-${VERSION_JDK:-latest}}" \
+  && echo "Installing JDK of specified major version: ${VER_JDK_MAJOR}" \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/') \
+  && local IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false) ;
+  if [[ "$VER_JDK_MAJOR" == "latest" ]] || { [[ "$VER_JDK_MAJOR" =~ ^[0-9]+$ ]] && [ "$VER_JDK_MAJOR" -gt 20 ]; }; then
+       PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/" \
+    && PAGE_JDK=$(curl -sL $PAGE_JDK_DOWNLOAD) \
+    && VER_JDK=$(echo "${PAGE_JDK}" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) \
+    && URL_JDK_ORCA=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
+    && VER_JDK_MINOR=$(echo $URL_JDK_ORCA | grep -Po '[\d\.]{3,}' | head -n1) \
+    && URL_JDK_DOWNLOAD=${URL_JDK_ORCA} ;
   else
-       URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK}-binaries/releases/latest" \
+       URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK_MAJOR}-binaries/releases/latest" \
     && URL_JDK_DOWNLOAD=$(
       curl -sL $URL_JDK_adoptium | grep 'tar.gz' | grep -vE '.sha256|.sig|.json|debug|test' | grep ${ARCH} | grep -i $(uname) \
       | grep -oP "(https?://[^\s<>\'\"]*)" | grep -E $(if [ "$IS_ALPINE" = true ]; then echo 'alpine'; else echo -v 'alpine'; fi) | head -n1
@@ -130,9 +129,18 @@ setup_java_base() {
 
 
 setup_java_maven() {
-     VERSION_MAVEN=$(curl -sL https://maven.apache.org/download.cgi | grep 'latest' | head -1 | grep -Po '\d[\d.]+') \
-  && install_zip "http://archive.apache.org/dist/maven/maven-3/${VERSION_MAVEN}/binaries/apache-maven-${VERSION_MAVEN}-bin.zip" \
-  && mv "/opt/apache-maven-${VERSION_MAVEN}" /opt/maven \
+     local VER_MAVEN_MAJOR="${1-3}" \
+  && ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
+  && VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -r) \
+  && if [ -n "${VER_MAVEN_MAJOR}" ]; then
+       VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -E "^${VER_MAVEN_MAJOR}\\." | sort -rV | head -1)
+     else
+       VER_MAVEN=$(echo "${VERS_MAVEN}" | sort -rV | head -1)
+     fi \
+  && URL_MAVEN="http://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
+  && echo "Downloading Maven version ${VER_MAVEN} from: ${URL_MAVEN}" \
+  && install_zip "${URL_MAVEN}" \
+  && mv "/opt/apache-maven-${VER_MAVEN}" /opt/maven \
   && ln -sf /opt/maven/bin/mvn* /usr/bin/ ;
 
   type mvn && echo "@ Version of Maven: $(mvn --version)" || return -1 ;
@@ -140,13 +148,19 @@ setup_java_maven() {
 
 
 setup_node_base() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     local VER_NODEJS_MAJOR="${1-}" \
+  && UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && VER_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[.\d]+') \
-  && VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1 ) \
-  && NODEJS_URL="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
-  && echo "Downloading NodeJS from: ${NODEJS_URL}" \
-  && install_tar_gz ${NODEJS_URL} \
+  && ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
+  && if [ -n "${VER_NODEJS_MAJOR}" ]; then
+       VER_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[.\d]+' | grep -E "^${VER_NODEJS_MAJOR}\\." | head -1)
+     else
+       VER_NODEJS=$(echo "${ATOM_NODEJS}" | head -1 | grep -Po '\d[.\d]+')
+       VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1)
+     fi \
+  && URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
+  && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
+  && install_tar_gz ${URL_NODEJS} \
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
@@ -157,9 +171,15 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     local VER_PNPM_MAJOR="${1-}" \
+  && UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && VER_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | head -1 | grep -Po '\d[\d.]+') \
+  && ATOM_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | sort -r) \
+  && if [ -n "${VER_PNPM_MAJOR}" ]; then
+       VER_PNPM=$(echo "${ATOM_PNPM}" | grep -Po '\d[\d.]+' | grep -E "^${VER_PNPM_MAJOR}\\." | head -1)
+     else
+       VER_PNPM=$(echo "${ATOM_PNPM}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
   && URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
   && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
@@ -171,14 +191,18 @@ setup_node_pnpm() {
 }
 
 setup_node_bun() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     local VER_BUN_MAJOR="${1-}" \
+  && UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
-  && VER_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+') \
-  && BUN_URL="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
-  && echo "Downloading bun from: ${BUN_URL}" \
-  && curl -sLO "${BUN_URL}" \
-  && sudo unzip -q "bun-${UNAME}-${ARCH}.zip" -d /opt \
-  && rm "bun-${UNAME}-${ARCH}.zip" \
+  && ATOM_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r) \
+  && if [ -n "${VER_BUN_MAJOR}" ]; then
+       VER_BUN=$(echo "${ATOM_BUN}" | grep -Po 'bun-v\K\d+\.\d+\.\d+' | grep -E "^${VER_BUN_MAJOR}\\." | head -1)
+     else
+       VER_BUN=$(echo "${ATOM_BUN}" | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+')
+     fi \
+  && URL_BUN="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
+  && echo "Downloading bun version ${VER_BUN} from: ${URL_BUN}" \
+  && install_zip "${URL_BUN}" \
   && sudo mv /opt/bun-* /opt/bun \
   && sudo ln -sf /opt/bun/bun /usr/bin/ \
   && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh ;
@@ -234,10 +258,15 @@ setup_R_base() {
 
 
 setup_julia() {
-  VER_JULIA_GET=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha))' | head -n1 | grep -Po '\d[\d.]+' )
-  VER_JULIA=${1:-"${VER_JULIA_GET}"}
+  local VER_JULIA_MAJOR="${1-}"
 
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ATOM_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha))' | sort -r) \
+  && if [ -n "${VER_JULIA_MAJOR}" ]; then
+       VER_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | grep -E "^${VER_JULIA_MAJOR}\\." | head -1)
+     else
+       VER_JULIA=$(echo "${ATOM_JULIA}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
   && ARCH_1=$(uname -m) \
   && ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
   && VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
