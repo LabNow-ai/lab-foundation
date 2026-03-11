@@ -98,18 +98,26 @@ setup_nvtop() {
 
 
 setup_java_base() {
-  ## 23, 21(LTS); 17, 11, 8
   ## Use the first arg and then VERSION_JDK to specify JDK major version. If not specified, will try the latest.
+  ## for JDK>20 （25, 21）, install oracle version, for ealier version (17, 11 ,8), install adoptium version.
+  ## Reason: for JDK 21 and 23, there are some issues with adoptium distribution (e.g. no alpine version for JDK 23, and no linux/arm64 version for JDK 21), while oracle distribution works fine.
+  ## For JDK 17, 11 and 8, both distributions are fine, but we prefer adoptium since it's more lightweight without extra tools (e.g. mission control) and also has alpine version.
 
-  local VER_JDK_MAJOR="${1:-${VERSION_JDK:-latest}}" \
-  && echo "Installing JDK of specified major version: ${VER_JDK_MAJOR}" \
+     local VER_JDK_MAJOR="${1:-${VERSION_JDK:-latest}}" \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/') \
-  && local IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false) ;
+  && local IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false) \
+  && echo "Installing JDK ${ARCH} of specified major version: ${VER_JDK_MAJOR}" ;
+  
+  local VER_JDK="$VER_JDK_MAJOR" ;
   if [[ "$VER_JDK_MAJOR" == "latest" ]] || { [[ "$VER_JDK_MAJOR" =~ ^[0-9]+$ ]] && [ "$VER_JDK_MAJOR" -gt 20 ]; }; then
-       PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/" \
-    && PAGE_JDK=$(curl -sL $PAGE_JDK_DOWNLOAD) \
-    && VER_JDK=$(echo "${PAGE_JDK}" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) \
-    && URL_JDK_ORCA=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
+    PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/"
+    PAGE_JDK=$(curl -sL --fail "$PAGE_JDK_DOWNLOAD" || { echo "Failed to fetch Oracle JDK download page" && return 1; } )
+
+    if [[ "$VER_JDK_MAJOR" == "latest" ]]; then
+      VER_JDK=$(echo "$PAGE_JDK" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) ;  
+    fi ;
+
+       URL_JDK_ORCA=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
     && VER_JDK_MINOR=$(echo $URL_JDK_ORCA | grep -Po '[\d\.]{3,}' | head -n1) \
     && URL_JDK_DOWNLOAD=${URL_JDK_ORCA} ;
   else

@@ -10,6 +10,8 @@ ARG SYS_PY_REPLACE="true"
 ARG PYTHON_VERSION="3.12"
 
 ENV CONDA_PREFIX=/opt/conda
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-setup-sys.sh \
  && export PATH=${CONDA_PREFIX}/bin:$PATH \
