@@ -46,8 +46,8 @@ install__clean(){
   type npm     && npm cache clean --force ;
   type mamba   && mamba clean -ya && rm -rf ~/micromamba ;
   type conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true ) ;
-  find "${CONDA_PREFIX:-/opt/conda}"/lib -type f -name "*.py[co]" -delete 2>/dev/null ;
-  find "${CONDA_PREFIX:-/opt/conda}"/lib -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null ;
+  sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type f -name "*.py[co]" -delete 2>/dev/null || true ;
+  sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true ;
 
   ( rm -rf /usr/share/doc /usr/share/man || true ) ;
   ( rm -rf /tmp/.* /tmp/* /var/log/* /var/cache/* /root/.cache /root/.* || true ) && chmod ugo+rwXt /tmp ;
