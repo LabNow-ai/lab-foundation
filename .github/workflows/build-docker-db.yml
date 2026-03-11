@@ -32,7 +32,7 @@ jobs:
     name: 'postgres-17,postgres-17-ext'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           source ./tool.sh && export PG_MAJOR=17
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -46,7 +46,7 @@ jobs:
     name: 'postgres-16,postgres-16-ext'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           source ./tool.sh && export PG_MAJOR=16
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -60,7 +60,7 @@ jobs:
     name: 'postgres-18'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: |
           source ./tool.sh && export PG_MAJOR=18
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -75,7 +75,7 @@ jobs:
     needs: ["job-postgres-17", "job-postgres-16", "job-postgres-18"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
