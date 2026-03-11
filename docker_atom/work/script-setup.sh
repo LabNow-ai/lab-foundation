@@ -3,9 +3,9 @@ source /opt/utils/script-utils.sh
 
 setup_mamba() {
   # Notice: mamba use $CONDA_PREFIX to locate base env
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && MICROMAMBA_VERSION="latest" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && VER_MICROMAMBA="latest" \
   && ARCH=$(uname -m | sed -e 's/x86_64/64/') \
-  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${MICROMAMBA_VERSION}" \
+  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${VER_MICROMAMBA}" \
   && echo "Downloading micromamba from ${URL_MICROMAMBA}" \
   && mkdir -pv /opt/mamba /etc/conda \
   && install_tar_bz $URL_MICROMAMBA bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
@@ -59,8 +59,8 @@ EOF
 }
 
 setup_conda_with_mamba() {
-     VERSION_PYTHON=${1:-"3.12"}; shift 1;
-     local PREFIX="${CONDA_PREFIX:-/opt/conda}" \
+     local VERSION_PYTHON=${1:-"3.12"} \
+  && local PREFIX="${CONDA_PREFIX:-/opt/conda}" \
   && mkdir -pv "${PREFIX}" \
   && mamba install -y --root-prefix="${PREFIX}" --prefix="${PREFIX}" -c "conda-forge" conda pip python="${VERSION_PYTHON}" \
   && setup_conda_postprocess ;
@@ -68,7 +68,7 @@ setup_conda_with_mamba() {
 
 setup_conda_download() {
   ## https://docs.conda.io/projects/miniconda/en/latest/index.html
-     URL_CONDA="https://repo.continuum.io/miniconda/Miniconda3-latest-$(uname)-$(arch).sh" \
+     local URL_CONDA="https://repo.continuum.io/miniconda/Miniconda3-latest-$(uname)-$(arch).sh" \
   && curl -sL "$URL_CONDA" -o /tmp/conda.sh \
   && mkdir -pv "${CONDA_PREFIX}" && bash /tmp/conda.sh -f -b -p "${CONDA_PREFIX}/" \
   && rm -rf /tmp/conda.sh \
@@ -82,8 +82,8 @@ setup_nvtop() {
   && apt-get -qq update -yq --fix-missing && apt-get -qq install -yq --no-install-recommends cmake ;
 
   # Install Utilities "nvtop" from source: libdrm-dev libsystemd-dev used by AMD/Intel GPU support, libudev-dev used by ubuntu18.04
-     LIB_PATH=$(find / -name "libnvidia-ml*" 2>/dev/null) \
-  && DIRECTORY=$(pwd) && cd /tmp \
+     local LIB_PATH=$(find / -name "libnvidia-ml*" 2>/dev/null) \
+  && local DIRECTORY=$(pwd) && cd /tmp \
   && sudo apt-get -qq update --fix-missing \
   && sudo apt-get -qq install -y --no-install-recommends libncurses5-dev libdrm-dev libsystemd-dev libudev-dev \
   && git clone https://github.com/Syllo/nvtop.git \
@@ -98,23 +98,29 @@ setup_nvtop() {
 
 
 setup_java_base() {
-  ## 23, 21(LTS); 17, 11, 8
+  ## Use the first arg and then VERSION_JDK to specify JDK major version. If not specified, will try the latest.
+  ## for JDK>20 （25, 21）, install oracle version, for ealier version (17, 11 ,8), install adoptium version.
+  ## Reason: for JDK 21 and 23, there are some issues with adoptium distribution (e.g. no alpine version for JDK 23, and no linux/arm64 version for JDK 21), while oracle distribution works fine.
+  ## For JDK 17, 11 and 8, both distributions are fine, but we prefer adoptium since it's more lightweight without extra tools (e.g. mission control) and also has alpine version.
 
-  local VER_JDK=${VERSION_JDK:-"11"}
-  ARCH=$(uname -m | sed -e 's/x86_64/x64/')
-  IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false)
+     local VER_JDK_MAJOR="${1:-${VERSION_JDK:-latest}}" \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/') \
+  && local IS_ALPINE=$(grep -q 'ID=alpine' /etc/os-release && echo true || echo false) \
+  && echo "Installing JDK ${ARCH} of specified major version: ${VER_JDK_MAJOR}" ;
+  
+  local VER_JDK="$VER_JDK_MAJOR" ;
+  if [[ "$VER_JDK_MAJOR" == "latest" ]] || { [[ "$VER_JDK_MAJOR" =~ ^[0-9]+$ ]] && [ "$VER_JDK_MAJOR" -gt 20 ]; }; then
+    PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/"
+    PAGE_JDK=$(curl -sL --fail "$PAGE_JDK_DOWNLOAD" || { echo "Failed to fetch Oracle JDK download page" && return 1; } )
 
-  echo "Use env var VERSION_JDK to specify JDK major version. If not specified, will install version 11 by default."
-  echo "Will install JDK version ${VER_JDK}"
+    if [[ "$VER_JDK_MAJOR" == "latest" ]]; then
+      VER_JDK=$(echo "$PAGE_JDK" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) ;  
+    fi ;
 
-     PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/" \
-  && URL_JDK_ORCA=$(curl -sL $PAGE_JDK_DOWNLOAD | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
-  && VER_JDK_MINOR=$(echo $URL_JDK_ORCA | grep -Po '[\d\.]{3,}' | head -n1)
-
-  if [ "$VER_JDK" -gt 20 ] ; then
-    URL_JDK_DOWNLOAD=${URL_JDK_ORCA}
+       URL_JDK_DOWNLOAD=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
+    && VER_JDK_MINOR=$(echo $URL_JDK_DOWNLOAD | grep -Po '[\d\.]{3,}' | head -n1) ;
   else
-       URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK}-binaries/releases/latest" \
+       URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK_MAJOR}-binaries/releases/latest" \
     && URL_JDK_DOWNLOAD=$(
       curl -sL $URL_JDK_adoptium | grep 'tar.gz' | grep -vE '.sha256|.sig|.json|debug|test' | grep ${ARCH} | grep -i $(uname) \
       | grep -oP "(https?://[^\s<>\'\"]*)" | grep -E $(if [ "$IS_ALPINE" = true ]; then echo 'alpine'; else echo -v 'alpine'; fi) | head -n1
@@ -130,9 +136,18 @@ setup_java_base() {
 
 
 setup_java_maven() {
-     VERSION_MAVEN=$(curl -sL https://maven.apache.org/download.cgi | grep 'latest' | head -1 | grep -Po '\d[\d.]+') \
-  && install_zip "http://archive.apache.org/dist/maven/maven-3/${VERSION_MAVEN}/binaries/apache-maven-${VERSION_MAVEN}-bin.zip" \
-  && mv "/opt/apache-maven-${VERSION_MAVEN}" /opt/maven \
+     local VER_MAVEN_MAJOR="${1-3}" \
+  && local ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
+  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -r) \
+  && if [ -n "${VER_MAVEN_MAJOR}" ]; then
+       local VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -E "^${VER_MAVEN_MAJOR}\\." | sort -rV | head -1)
+     else
+       local VER_MAVEN=$(echo "${VERS_MAVEN}" | sort -rV | head -1)
+     fi \
+  && local URL_MAVEN="http://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
+  && echo "Downloading Maven version ${VER_MAVEN} from: ${URL_MAVEN}" \
+  && install_zip "${URL_MAVEN}" \
+  && mv "/opt/apache-maven-${VER_MAVEN}" /opt/maven \
   && ln -sf /opt/maven/bin/mvn* /usr/bin/ ;
 
   type mvn && echo "@ Version of Maven: $(mvn --version)" || return -1 ;
@@ -140,13 +155,19 @@ setup_java_maven() {
 
 
 setup_node_base() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && VER_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[.\d]+') \
-  && VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1 ) \
-  && NODEJS_URL="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
-  && echo "Downloading NodeJS from: ${NODEJS_URL}" \
-  && install_tar_gz ${NODEJS_URL} \
+     local VER_NODEJS_MAJOR="${1-}" \
+  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
+  && local ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
+  && if [ -n "${VER_NODEJS_MAJOR}" ]; then
+       local VER_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[.\d]+' | grep -E "^${VER_NODEJS_MAJOR}\\." | head -1)
+     else
+       local VER_NODEJS=$(echo "${ATOM_NODEJS}" | head -1 | grep -Po '\d[.\d]+')
+       local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1)
+     fi \
+  && local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
+  && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
+  && install_tar_gz ${URL_NODEJS} \
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
@@ -157,10 +178,16 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && VER_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | head -1 | grep -Po '\d[\d.]+') \
-  && URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
+     local VER_PNPM_MAJOR="${1-}" \
+  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
+  && local ATOM_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | sort -r) \
+  && if [ -n "${VER_PNPM_MAJOR}" ]; then
+       local VER_PNPM=$(echo "${ATOM_PNPM}" | grep -Po '\d[\d.]+' | grep -E "^${VER_PNPM_MAJOR}\\." | head -1)
+     else
+       local VER_PNPM=$(echo "${ATOM_PNPM}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
+  && local URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
   && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
   && sudo chmod +x /usr/local/bin/pnpm \
@@ -171,14 +198,18 @@ setup_node_pnpm() {
 }
 
 setup_node_bun() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
-  && VER_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+') \
-  && BUN_URL="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
-  && echo "Downloading bun from: ${BUN_URL}" \
-  && curl -sLO "${BUN_URL}" \
-  && sudo unzip -q "bun-${UNAME}-${ARCH}.zip" -d /opt \
-  && rm "bun-${UNAME}-${ARCH}.zip" \
+     local VER_BUN_MAJOR="${1-}" \
+  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
+  && local ATOM_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r) \
+  && if [ -n "${VER_BUN_MAJOR}" ]; then
+       local VER_BUN=$(echo "${ATOM_BUN}" | grep -Po 'bun-v\K\d+\.\d+\.\d+' | grep -E "^${VER_BUN_MAJOR}\\." | head -1)
+     else
+       local VER_BUN=$(echo "${ATOM_BUN}" | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+')
+     fi \
+  && local URL_BUN="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
+  && echo "Downloading bun version ${VER_BUN} from: ${URL_BUN}" \
+  && install_zip "${URL_BUN}" \
   && sudo mv /opt/bun-* /opt/bun \
   && sudo ln -sf /opt/bun/bun /usr/bin/ \
   && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh ;
@@ -188,10 +219,16 @@ setup_node_bun() {
 
 
 setup_GO() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(dpkg --print-architecture) \
-  && VER_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | head -1 | grep -Po '\d[\d.]+') \
-  && URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
+     local VER_GO_MAJOR="${1-}" \
+  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(dpkg --print-architecture) \
+  && local ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r ) \
+  && if [ -n "${VER_GO_MAJOR}" ]; then
+       local VER_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | grep -E "^${VER_GO_MAJOR}\\." | head -1)
+     else
+       local VER_GO=$(echo "${ATOM_GO}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
+  && local URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
   && sudo ln -sf /opt/go/bin/go* /usr/bin/ \
@@ -220,7 +257,7 @@ setup_rust() {
 
 
 setup_R_base() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && curl -sL https://cloud.r-project.org/bin/${UNAME}/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
   && echo "deb https://cloud.r-project.org/bin/${UNAME}/ubuntu $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/cran.list \
   && install_apt  /opt/utils/install_list_R_base.apt \
@@ -234,14 +271,18 @@ setup_R_base() {
 
 
 setup_julia() {
-  VER_JULIA_GET=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha))' | head -n1 | grep -Po '\d[\d.]+' )
-  VER_JULIA=${1:-"${VER_JULIA_GET}"}
-
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH_1=$(uname -m) \
-  && ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
-  && VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
-  && URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
+     local VER_JULIA_MAJOR="${1-}" \
+  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH_1=$(uname -m) \
+  && local ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
+  && local ATOM_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha|beta))' | sort -r) \
+  && if [ -n "${VER_JULIA_MAJOR}" ]; then
+       local VER_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | grep -E "^${VER_JULIA_MAJOR}\\." | head -1)
+     else
+       local VER_JULIA=$(echo "${ATOM_JULIA}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
+  && local VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
+  && local URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
   && echo "Downloading Julia version ${VER_JULIA} from: ${URL_JULIA}" \
   && install_tar_gz $URL_JULIA \
   && sudo mv /opt/julia-* /opt/julia \
@@ -255,8 +296,8 @@ setup_julia() {
 
 
 setup_lua_base() {
-    VER_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)') \
- && URL_LUA="http://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
+    local VER_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)') \
+ && local URL_LUA="http://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
  && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
@@ -269,9 +310,9 @@ setup_lua_base() {
 
 setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
-    UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
- && VER_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1) \
- && URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
+    local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+ && local VER_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1) \
+ && local URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
  && install_tar_gz $URL_LUA_ROCKS \
  && sudo mv /opt/luarocks-* /tmp/luarocks && cd /tmp/luarocks \
@@ -284,10 +325,10 @@ setup_lua_rocks() {
 
 
 setup_bazel() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
-  && VER_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
-  && URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
+     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
+  && local VER_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
+  && local URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
   && /tmp/bazel.sh && rm /tmp/bazel.sh ;
   
@@ -296,8 +337,8 @@ setup_bazel() {
 
 
 setup_gradle() {
-     VER_GRADLE=$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | head -1 | grep -Po '\d[\d.]+' ) \
-  && install_zip "https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
+     local VER_GRADLE=$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | head -1 | grep -Po '\d[\d.]+' ) \
+  && local URL_GRADLE="https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
   && mv /opt/gradle* /opt/gradle \
   && ln -sf /opt/gradle/bin/gradle /usr/bin ;
   
@@ -306,10 +347,10 @@ setup_gradle() {
 
 
 setup_yq() {
-  ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
+  local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
-     VER_YQ=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
-  && URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
+     local VER_YQ=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
+  && local URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
   && echo "Installing yq v${VER_YQ} for arch ${ARCH} from: ${URL_YQ}" \
   && curl -fSL "${URL_YQ}" -o /tmp/yq \
   && install -m 0755 -D /tmp/yq /opt/bin/yq \

@@ -10,6 +10,8 @@ ENV XDG_RUNTIME_DIR="/tmp"
 COPY work /opt/utils/
 
 RUN set -eux \
+ && source /opt/utils/script-setup.sh \
+ && setup_yq \
  && source /opt/utils/script-setup-docker.sh \
  && setup_docker_compose && setup_docker_syncer \
  && pip install -U PyYaml \

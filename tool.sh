@@ -5,13 +5,10 @@ CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
 CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-"main"}
 CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 
-if [ "${CI_PROJECT_BRANCH}" = "main" ] ; then
-    # If on the main branch, docker images namespace will be same as CI_PROJECT_NAME's name space
-    export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})" ;
-else
-    # not main branch, docker namespace = {CI_PROJECT_NAME's name space} + "-" + {1st substr before / in CI_PROJECT_SPACE}
-    export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})0${CI_PROJECT_SPACE}" ;
-fi
+# If on the main branch, image namespace will be same as CI_PROJECT_NAME's name space;
+# else (not main branch), image namespace = {CI_PROJECT_NAME's name space} + "0" + {1st substr before / in CI_PROJECT_SPACE}.
+[ "${CI_PROJECT_BRANCH}" = "main" ] && NAMESPACE_SUFFIX="" || NAMESPACE_SUFFIX="0${CI_PROJECT_SPACE}" ;
+export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})${NAMESPACE_SUFFIX}" ;
 
 export IMG_NAMESPACE=$(echo "${CI_PROJECT_NAMESPACE}" | awk '{print tolower($0)}')
 export IMG_PREFIX_SRC=$(echo "${REGISTRY_SRC:-"docker.io"}/${IMG_NAMESPACE}" | awk '{print tolower($0)}')
@@ -24,9 +21,6 @@ echo "--------> DOCKER_IMG_PREFIX_SRC=${IMG_PREFIX_SRC}"
 echo "--------> DOCKER_IMG_PREFIX_DST=${IMG_PREFIX_DST}"
 echo "--------> DOCKER_TAG_SUFFIX=${TAG_SUFFIX}"
 
-[ ! -f /etc/docker/daemon.json ] && sudo tee /etc/docker/daemon.json > /dev/null <<< '{}'
-jq '.experimental=true | ."data-root"="/mnt/docker"' /etc/docker/daemon.json > /tmp/daemon.json && sudo mv /tmp/daemon.json /etc/docker/
-( sudo service docker restart || true ) && cat /etc/docker/daemon.json && docker info
 
 build_image() {
     echo "$@" ;
@@ -83,13 +77,25 @@ clear_images() {
 
 
 remove_folder() {
-    sudo du -h -d1 "$1" || true ;
-    sudo rm -rf "$1" || true ;
+    for dir in "$@"; do
+        if [ -d "$dir" ]; then
+            echo "Removing folder: $dir" ;
+            sudo du -h -d1 "$dir" || true ;
+            sudo rm -rf "$dir" || true ;
+        else
+            echo "Warn: directory not found: $dir" ;
+        fi
+    done
 }
 
 free_diskspace() {
-    remove_folder /usr/share/dotnet
-    remove_folder /usr/local/lib/android
-    # remove_folder /var/lib/docker
-    df -h
+    remove_folder /usr/share/dotnet ; # /usr/local/lib/android /var/lib/docker
+    df -h ;
 }
+
+setup_github_actions() {
+    [ ! -f /etc/docker/daemon.json ] && sudo tee /etc/docker/daemon.json > /dev/null <<< '{}' ;
+    jq '.experimental=true | ."data-root"="/mnt/docker"' /etc/docker/daemon.json > /tmp/daemon.json && sudo mv /tmp/daemon.json /etc/docker/ ;
+    ( sudo service docker restart || true ) && cat /etc/docker/daemon.json && docker info ;
+}
+[ "$GITHUB_ACTIONS" = "true" ] && echo "Running in GitHub Actions and Setup Env: $(setup_github_actions)"

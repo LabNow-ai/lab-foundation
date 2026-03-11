@@ -42,18 +42,19 @@ install_mvn() { cat $1 | cut -d "%" -f 1 | xargs -r -n1 -I {} mvn dependency:cop
 
 # function to clean up
 install__clean(){
-  which apt-get && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
-  which mamba   && mamba clean -ya && rm -rf ~/micromamba
-  which conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true )
-  find "${CONDA_PREFIX:-/opt/conda}"/lib | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-  which npm     && npm cache clean --force
-  ( rm -rf /tmp/.* /tmp/* /var/log/* /var/cache/* /root/.cache /root/.* || true )
-  ( rm -rf /usr/share/doc /usr/share/man || true )
-  chmod ugo+rwXt /tmp
-  ls -alh /root /tmp
-  echo "@ System release info:" && cat /etc/*release*
-  echo "@ System environment variables:" && printenv | sort
-  echo "@ Version of image: building finished at:" $(date)
+  type apt-get && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* ;
+  type npm     && npm cache clean --force ;
+  type mamba   && mamba clean -ya && rm -rf ~/micromamba ;
+  type conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true ) ;
+  sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type f -name "*.py[co]" -delete 2>/dev/null || true ;
+  sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true ;
+
+  ( rm -rf /usr/share/doc /usr/share/man || true ) ;
+  ( rm -rf /tmp/.* /tmp/* /var/log/* /var/cache/* /root/.cache /root/.* || true ) && chmod ugo+rwXt /tmp ;
+  ls -alh /root /tmp ;
+  echo "@ System release info:" && cat /etc/*release* ;
+  echo "@ System environment variables:" && printenv | sort ;
+  echo "@ Version of image: building finished at:" $(date) ;
   true
 }
 

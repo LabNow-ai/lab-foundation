@@ -18,6 +18,8 @@ if [ -f $FILE_DEB ]; then
   echo "Finished setting ubuntu/debian mirror"
 fi
 
+[ -f /etc/apt/sources.list.d/pgdg.list ] && sed -i 's/apt.postgresql.org\/pub/mirrors.tencentyun.com\/postgresql/' /etc/apt/sources.list.d/pgdg.list
+
 if [ -f "$(which python)" ] ; then
   echo "Found python, setting pypi source in /etc/pip.conf"
   cat >/etc/pip.conf <<EOF
