@@ -3,9 +3,9 @@ source /opt/utils/script-utils.sh
 
 setup_mamba() {
   # Notice: mamba use $CONDA_PREFIX to locate base env
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && MICROMAMBA_VERSION="latest" \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && VER_MICROMAMBA="latest" \
   && ARCH=$(uname -m | sed -e 's/x86_64/64/') \
-  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${MICROMAMBA_VERSION}" \
+  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${VER_MICROMAMBA}" \
   && echo "Downloading micromamba from ${URL_MICROMAMBA}" \
   && mkdir -pv /opt/mamba /etc/conda \
   && install_tar_bz $URL_MICROMAMBA bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
@@ -219,9 +219,15 @@ setup_node_bun() {
 
 
 setup_GO() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     local VER_GO_MAJOR="${1-}" \
+  && UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(dpkg --print-architecture) \
-  && VER_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | head -1 | grep -Po '\d[\d.]+') \
+  && ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r ) \
+  && if [ -n "${VER_GO_MAJOR}" ]; then
+       VER_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | grep -E "^${VER_GO_MAJOR}\\." | head -1)
+     else
+       VER_GO=$(echo "${ATOM_GO}" | head -1 | grep -Po '\d[\d.]+')
+     fi \
   && URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
