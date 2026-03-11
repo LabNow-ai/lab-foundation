@@ -93,7 +93,7 @@ RUN set -eux \
     ) ; done \
  && if [ "$(echo "${IDX}" | cut -c1-2)" = "cu" ] && echo "${ARG_PROFILE_PYTHON}" | grep -qE "torch|paddle" ; then \
           echo "Try to uninstall nvidia python packages to reduce storage size..." \
-       && pip freeze | grep -i '^nvidia-' | cut -d'=' -f1 | xargs -r pip uninstall -y \
+       && pip freeze | awk -F= 'tolower($1) ~ /^nvidia-/ {print $1}' | xargs -r pip uninstall -y \
        && apt-get -qq update --fix-missing && apt-get -qq install -y --no-install-recommends --allow-change-held-packages libcusparselt0 libnccl2 libnccl-dev ; \
     fi \
  # -----------------------------
