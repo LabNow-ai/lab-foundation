@@ -117,9 +117,8 @@ setup_java_base() {
       VER_JDK=$(echo "$PAGE_JDK" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) ;  
     fi ;
 
-       URL_JDK_ORCA=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
-    && VER_JDK_MINOR=$(echo $URL_JDK_ORCA | grep -Po '[\d\.]{3,}' | head -n1) \
-    && URL_JDK_DOWNLOAD=${URL_JDK_ORCA} ;
+       URL_JDK_DOWNLOAD=$(echo "${PAGE_JDK}" | grep "tar.gz" | grep "http" | grep -v sha256 | grep ${ARCH} | grep -i $(uname) | grep -oP "(https?://[^\s<>\'\"]*)" | grep "jdk-${VER_JDK}" | head -n 1) \
+    && VER_JDK_MINOR=$(echo $URL_JDK_DOWNLOAD | grep -Po '[\d\.]{3,}' | head -n1) ;
   else
        URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK_MAJOR}-binaries/releases/latest" \
     && URL_JDK_DOWNLOAD=$(
