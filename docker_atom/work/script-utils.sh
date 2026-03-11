@@ -43,10 +43,10 @@ install_mvn() { cat $1 | cut -d "%" -f 1 | xargs -r -n1 -I {} mvn dependency:cop
 # function to clean up
 install__clean(){
   type apt-get && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* ;
+  type npm     && npm cache clean --force ;
   type mamba   && mamba clean -ya && rm -rf ~/micromamba ;
   type conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true ) ;
   find "${CONDA_PREFIX:-/opt/conda}"/lib \( -name "__pycache__" -o -name "*.pyc" -o -name "*.pyo" \) -delete 2>/dev/null ;
-  type npm     && npm cache clean --force ;
   ( rm -rf /usr/share/doc /usr/share/man || true ) ;
   ( rm -rf /tmp/.* /tmp/* /var/log/* /var/cache/* /root/.cache /root/.* || true ) && chmod ugo+rwXt /tmp ;
   ls -alh /root /tmp ;
