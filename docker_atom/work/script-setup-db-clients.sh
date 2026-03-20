@@ -12,6 +12,20 @@ setup_postgresql_client() {
   type psql && echo "@ Version of psql client: $(psql --version)" || return -1
 }
 
+setup_duckdb() {
+  local ARCH="$(uname -m)" \
+  && local ARCH_DUCKDB=$([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64") \
+  && local VER_DUCKDB="$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')" \
+  && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/${VER_DUCKDB}/duckdb_cli-linux-${ARCH_DUCKDB}.zip" \
+  && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.zip" \
+  && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
+  && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
+  && unzip -q "${TMP_FILE}" -d /tmp \
+  && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
+  && rm -f "${TMP_FILE}" /tmp/duckdb ;
+
+  /opt/bin/duckdb --version && echo "@ DuckDB installed" || return -1 ;
+}
 
 setup_mysql_client() {
   # will download ~5MB files and use ~76MB disk after installation
