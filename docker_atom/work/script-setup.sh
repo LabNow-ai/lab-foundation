@@ -171,6 +171,7 @@ setup_node_base() {
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
+  && source /etc/profile.d/path-node.sh \
   && npm install -g npm ;
   # cd /tmp && corepack enable && yarn set version stable && echo "@ Version of Yarn: $(yarn -v)"
   type node && echo "@ Version of Node and node: $(node -v)" || return -1 ;
@@ -191,8 +192,10 @@ setup_node_pnpm() {
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
   && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
   && sudo chmod +x /usr/local/bin/pnpm \
-  && echo 'export PNPM_HOME="/usr/local/bin"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh ;
+  && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
+  && echo 'export PNPM_HOME="/opt/node/pnpm"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
+  && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh \
+  && source /etc/profile.d/path-pnpm.sh ;
 
   type pnpm && echo "@ Version of pnpm: $(pnpm --version)" || return -1 ;
 }
@@ -212,7 +215,8 @@ setup_node_bun() {
   && install_zip "${URL_BUN}" \
   && sudo mv /opt/bun-* /opt/bun \
   && sudo ln -sf /opt/bun/bun /usr/bin/ \
-  && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh ;
+  && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh \
+  && source /etc/profile.d/path-bun.sh ;
 
   type bun && echo "@ Version of bun: $(bun -v)" || return $? ;
 }
@@ -235,7 +239,8 @@ setup_GO() {
   && echo 'export GOROOT="/opt/go"'       | sudo tee -a /etc/profile.d/path-go.sh \
   && echo 'export GOBIN="$GOROOT/bin"'    | sudo tee -a /etc/profile.d/path-go.sh \
   && echo 'export GOPATH="$GOROOT/path"'  | sudo tee -a /etc/profile.d/path-go.sh \
-  && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' | sudo tee -a /etc/profile.d/path-go.sh ;
+  && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' | sudo tee -a /etc/profile.d/path-go.sh \
+  && source /etc/profile.d/path-go.sh ;
   
   type go && echo "@ Version of golang: $(go version)" || return -1 ;
 }
@@ -248,9 +253,9 @@ setup_rust() {
   '
      echo 'export CARGO_HOME="/opt/cargo"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export RUSTUP_HOME="/opt/rust"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
-  && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null ;
+  && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
+  && source /etc/profile.d/path-rust.sh ;
 
-  source /etc/profile.d/path-rust.sh
   type rustup && echo "@ Version of rustup: $(rustup --version)" || return -1 ;
   type rustc  && echo "@ Version of rustc:  $(rustc  --version)" || return -1 ;
 }
