@@ -192,7 +192,7 @@ setup_node_pnpm() {
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
   && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
   && sudo chmod +x /usr/local/bin/pnpm \
-  && echo 'export PNPM_STORE_PATH=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
+  && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && echo 'export PNPM_HOME="/opt/node/pnpm"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && source /etc/profile.d/path-pnpm.sh ;
