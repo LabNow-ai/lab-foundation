@@ -59,7 +59,7 @@ EOF
 }
 
 setup_conda_with_mamba() {
-     local VERSION_PYTHON=${1:-"3.12"} \
+     local VERSION_PYTHON=${1:-"3.13"} \
   && local PREFIX="${CONDA_PREFIX:-/opt/conda}" \
   && mkdir -pv "${PREFIX}" \
   && mamba install -y --root-prefix="${PREFIX}" --prefix="${PREFIX}" -c "conda-forge" conda pip python="${VERSION_PYTHON}" \
@@ -190,11 +190,9 @@ setup_node_pnpm() {
      fi \
   && local URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
-  && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
-  && sudo chmod +x /usr/local/bin/pnpm \
+  && curl -L "${URL_PNPM}" -o /opt/node/pnpm && sudo chmod +x /opt/node/pnpm \
+  && ln -sf /opt/node/pnpm /usr/local/bin/ \
   && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && echo 'export PNPM_HOME="/opt/node/pnpm"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && source /etc/profile.d/path-pnpm.sh ;
 
   type pnpm && echo "@ Version of pnpm: $(pnpm --version)" || return -1 ;

@@ -29,7 +29,7 @@ env:
 
 jobs:
   job-base:
-    name: 'atom,base,python-3.12'
+    name: 'atom,base,python-3.13'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -37,8 +37,8 @@ jobs:
           source ./tool.sh
           build_image atom latest docker_atom/atom.Dockerfile && push_image
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image python-3.12 latest docker_base/base.Dockerfile --build-arg "PYTHON_VERSION=3.12"
-          alias_image python-3.12 latest base latest && push_image
+          build_image python-3.13 latest docker_base/base.Dockerfile --build-arg "PYTHON_VERSION=3.13"
+          alias_image python-3.13 latest base latest && push_image
 
   job-python:
     name: 'python-3.7,python-3.13'
