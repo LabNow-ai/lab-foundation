@@ -25,7 +25,7 @@ RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-se
  && ( (( $PY_VER >= 308 )) && pip install -U uv || echo "Skip uv install" ) \
  && echo "Backup the conda version of platform.py as it's different from the system version." \
  && cp "${CONDA_PREFIX}/lib/python${PYTHON_VERSION}"/platform.py "${CONDA_PREFIX}/lib/python${PYTHON_VERSION}"/platform.py.bak \
- && if $( ${SYS_PY_EXISTS:-false} && ${SYS_PY_REPLACE:-false} ) ; then \
+ && if [ "${SYS_PY_EXISTS:-false}" = "true" ] && [ "${SYS_PY_REPLACE:-false}" = "true" ] ; then \
        py3versions -d \
     && PYTHON_VERSION_DEFAULT=$(py3versions -v -i) \
     && PYTHON_PTH_FILE=$("${CONDA_PREFIX}"/bin/python3 -c 'import sys;print(sys.path[-1]+"/usr_share.pth")') \
