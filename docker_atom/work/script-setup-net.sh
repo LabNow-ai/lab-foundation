@@ -1,9 +1,10 @@
 setup_traefik() {
      VER_TRAEFIK=$(curl -sL https://github.com/traefik/traefik/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+') \
   && URL_TRAEFIK="https://github.com/traefik/traefik/releases/download/v${VER_TRAEFIK}/traefik_v${VER_TRAEFIK}_linux_$(dpkg --print-architecture).tar.gz" \
-  && curl -o /tmp/TMP.tgz -sL "${URL_TRAEFIK}" && tar -C /opt -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
-  && ln -sf /opt/traefik /usr/bin/ ;
-  
+  && curl -o /tmp/TMP.tgz -sL "${URL_TRAEFIK}" \
+  && mkdir -pv /opt/bin && tar -C /opt/bin -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
+  && chmod +x /opt/bin/traefik && ln -sf /opt/bin/traefik /usr/bin/ ;
+
   type traefik && echo "@ Version of traefik: $(traefik version)" || return -1 ;
 }
 
