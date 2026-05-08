@@ -34,7 +34,7 @@ RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-se
     && sed -i "s/${PYTHON_VERSION_DEFAULT}/${PYTHON_VERSION}/g" /usr/share/python3/debian_defaults \
     && echo "/usr/share/pyshared/" >>  "${PYTHON_PTH_FILE}" \
     && echo "/usr/share/python3/"  >>  "${PYTHON_PTH_FILE}" \
-    && cp -rf  /usr/lib/python3/dist-packages/* ./ \
+    && cp -rf  /usr/lib/python3/dist-packages/* / \
     && rm -rf $(/usr/bin/python3 -c 'import sys; print(" ".join(i for i in sys.path if "python" in i))') /usr/bin/python3* /usr/lib/python${PYTHON_VERSION} \
     && rm -rf /usr/lib/python${PYTHON_VERSION} && ln -sf "${CONDA_PREFIX}"/lib/python${PYTHON_VERSION} /usr/lib/ ; \
  else \
