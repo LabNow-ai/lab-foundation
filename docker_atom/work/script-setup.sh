@@ -59,7 +59,7 @@ EOF
 }
 
 setup_conda_with_mamba() {
-     local VERSION_PYTHON=${1:-"3.12"} \
+     local VERSION_PYTHON=${1:-"3.13"} \
   && local PREFIX="${CONDA_PREFIX:-/opt/conda}" \
   && mkdir -pv "${PREFIX}" \
   && mamba install -y --root-prefix="${PREFIX}" --prefix="${PREFIX}" -c "conda-forge" conda pip python="${VERSION_PYTHON}" \
@@ -76,7 +76,7 @@ setup_conda_download() {
 }
 
 setup_nvtop() {
-  ## The compiliation requries CMake 3.18 or higher, while the default version in CUDA 11.2 images is 3.16.3
+  ## The compilation requires CMake 3.18 or higher, while the default version in CUDA 11.2 images is 3.16.3
      curl -sL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg \
   && echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/kitware.list \
   && apt-get -qq update -yq --fix-missing && apt-get -qq install -yq --no-install-recommends cmake ;
@@ -99,7 +99,7 @@ setup_nvtop() {
 
 setup_java_base() {
   ## Use the first arg and then VERSION_JDK to specify JDK major version. If not specified, will try the latest.
-  ## for JDK>20 （25, 21）, install oracle version, for ealier version (17, 11 ,8), install adoptium version.
+  ## for JDK>20 (25, 21), install oracle version, for earlier version (17, 11 ,8), install adoptium version.
   ## Reason: for JDK 21 and 23, there are some issues with adoptium distribution (e.g. no alpine version for JDK 23, and no linux/arm64 version for JDK 21), while oracle distribution works fine.
   ## For JDK 17, 11 and 8, both distributions are fine, but we prefer adoptium since it's more lightweight without extra tools (e.g. mission control) and also has alpine version.
 
@@ -144,7 +144,7 @@ setup_java_maven() {
      else
        local VER_MAVEN=$(echo "${VERS_MAVEN}" | sort -rV | head -1)
      fi \
-  && local URL_MAVEN="http://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
+  && local URL_MAVEN="https://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
   && echo "Downloading Maven version ${VER_MAVEN} from: ${URL_MAVEN}" \
   && install_zip "${URL_MAVEN}" \
   && mv "/opt/apache-maven-${VER_MAVEN}" /opt/maven \
@@ -190,11 +190,9 @@ setup_node_pnpm() {
      fi \
   && local URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
-  && curl -L "${URL_PNPM}" -o /usr/local/bin/pnpm \
-  && sudo chmod +x /usr/local/bin/pnpm \
+  && curl -L "${URL_PNPM}" -o /opt/node/pnpm && sudo chmod +x /opt/node/pnpm \
+  && ln -sf /opt/node/pnpm /usr/local/bin/ \
   && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && echo 'export PNPM_HOME="/opt/node/pnpm"' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && echo 'export PATH=$PATH:$PNPM_HOME'      | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && source /etc/profile.d/path-pnpm.sh ;
 
   type pnpm && echo "@ Version of pnpm: $(pnpm --version)" || return -1 ;
@@ -302,7 +300,7 @@ setup_julia() {
 
 setup_lua_base() {
     local VER_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)') \
- && local URL_LUA="http://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
+ && local URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
  && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
