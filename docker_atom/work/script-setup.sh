@@ -190,8 +190,8 @@ setup_node_pnpm() {
      fi \
   && local URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
   && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
-  && curl -L "${URL_PNPM}" -o /opt/node/pnpm && sudo chmod +x /opt/node/pnpm \
-  && ln -sf /opt/node/pnpm /usr/local/bin/ \
+  && curl -L "${URL_PNPM}" -o /opt/node/bin/pnpm && sudo chmod +x /opt/node/bin/pnpm \
+  && ln -sf /opt/node/bin/pnpm /usr/local/bin/ \
   && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
   && source /etc/profile.d/path-pnpm.sh ;
 
