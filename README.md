@@ -6,7 +6,7 @@
 [![Visit Images on Quay.io](https://img.shields.io/badge/Quay.io-Images-green)](https://quay.io/organization/labnow)
 [![Visit Images on DockerHub](https://img.shields.io/badge/DockerHub-Images-green)](https://hub.docker.com/u/LabNow)
 
-Please generously STAR★ our project or donate to us!  [![GitHub Starts](https://img.shields.io/github/stars/LabNow-ai/lab-foundation.svg?label=Stars&style=social)](https://github.com/LabNow-ai/lab-foundation/stargazers)
+Please generously STAR★ our project or donate to us!  [![GitHub Starts](https://img.shields.io/github/stars/LabNow-ai/lab-foundation.svg?label=Stars)](https://github.com/LabNow-ai/lab-foundation/stargazers)
 [![Donate-PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/haobibo)
 [![Donate-AliPay](https://img.shields.io/badge/Donate-Alipay-blue.svg)](https://raw.githubusercontent.com/wiki/haobibo/resources/img/Donate-AliPay.png)
 [![Donate-WeChat](https://img.shields.io/badge/Donate-WeChat-green.svg)](https://raw.githubusercontent.com/wiki/haobibo/resources/img/Donate-WeChat.png)

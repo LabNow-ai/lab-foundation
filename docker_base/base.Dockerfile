@@ -22,10 +22,11 @@ RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-se
  && echo "Install Mamba:" && setup_mamba \
  && echo "Install Python ${PYTHON_VERSION} and conda:" && setup_conda_with_mamba ${PYTHON_VERSION} \
  && PY_VER=$(/opt/conda/bin/python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor:02d}")' 2>/dev/null) \
+ ## Install uv for Python >= 3.8 (PY_VER format: major+minor, e.g. 3.8 -> 308) 
  && ( (( $PY_VER >= 308 )) && pip install -U uv || echo "Skip uv install" ) \
  && echo "Backup the conda version of platform.py as it's different from the system version." \
  && cp "${CONDA_PREFIX}/lib/python${PYTHON_VERSION}"/platform.py "${CONDA_PREFIX}/lib/python${PYTHON_VERSION}"/platform.py.bak \
- && if $( ${SYS_PY_EXISTS:-false} && ${SYS_PY_REPLACE:-false} ) ; then \
+ && if [ "${SYS_PY_EXISTS:-false}" = "true" ] && [ "${SYS_PY_REPLACE:-false}" = "true" ] ; then \
        py3versions -d \
     && PYTHON_VERSION_DEFAULT=$(py3versions -v -i) \
     && PYTHON_PTH_FILE=$("${CONDA_PREFIX}"/bin/python3 -c 'import sys;print(sys.path[-1]+"/usr_share.pth")') \
@@ -34,7 +35,7 @@ RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-se
     && sed -i "s/${PYTHON_VERSION_DEFAULT}/${PYTHON_VERSION}/g" /usr/share/python3/debian_defaults \
     && echo "/usr/share/pyshared/" >>  "${PYTHON_PTH_FILE}" \
     && echo "/usr/share/python3/"  >>  "${PYTHON_PTH_FILE}" \
-    && cp -rf  /usr/lib/python3/dist-packages/* ./ \
+    && cp -rf /usr/lib/python3/dist-packages/* ${HOME_DIR:-"/root"}/ \
     && rm -rf $(/usr/bin/python3 -c 'import sys; print(" ".join(i for i in sys.path if "python" in i))') /usr/bin/python3* /usr/lib/python${PYTHON_VERSION} \
     && rm -rf /usr/lib/python${PYTHON_VERSION} && ln -sf "${CONDA_PREFIX}"/lib/python${PYTHON_VERSION} /usr/lib/ ; \
  else \
