@@ -179,23 +179,28 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-     local VER_PNPM_MAJOR="${1-}" \
-  && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && local ATOM_PNPM=$(curl -sL https://github.com/pnpm/pnpm/releases.atom | grep 'releases/tag' | grep -v 'alpha' | sort -r) \
-  && if [ -n "${VER_PNPM_MAJOR}" ]; then
-       local VER_PNPM=$(echo "${ATOM_PNPM}" | grep -Po '\d[\d.]+' | grep -E "^${VER_PNPM_MAJOR}\\." | head -1)
+  local VER_PNPM_MAJOR="${1:-}" UNAME ARCH VER_PNPM URL_PNPM TMPDIR FILTER ;
+  UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
+  && FILTER="${VER_PNPM_MAJOR:+^${VER_PNPM_MAJOR}\\.}" \
+  && VER_PNPM=$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha \
+       | { [ -n "${FILTER}" ] && grep -E "${FILTER}" || cat ; } | sort -V | tail -1) \
+  && [ -n "${VER_PNPM}" ] \
+  && mkdir -p /opt/node/bin /opt/node/pnpm-store \
+  && if [ "${VER_PNPM%%.*}" -ge 11 ]; then
+       URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}.tar.gz" \
+       && echo "@ Installing pnpm v${VER_PNPM} from: ${URL_PNPM}" \
+       && TMPDIR=$(mktemp -d) && curl -fL "${URL_PNPM}" | tar -xzf - -C "${TMPDIR}" \
+       && mv -f "${TMPDIR}/pnpm" /opt/node/bin/pnpm \
+       && { [ -d "${TMPDIR}/dist" ] && rm -rf /opt/node/bin/dist && mv "${TMPDIR}/dist" /opt/node/bin/ ; rm -rf "${TMPDIR}" ; true ; } ;
      else
-       local VER_PNPM=$(echo "${ATOM_PNPM}" | head -1 | grep -Po '\d[\d.]+')
+       URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
+       && echo "@ Installing pnpm v${VER_PNPM} from: ${URL_PNPM}" \
+       && curl -fL "${URL_PNPM}" -o /opt/node/bin/pnpm ;
      fi \
-  && local URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
-  && echo "Downloading pnpm version ${VER_PNPM} from: ${URL_PNPM}" \
-  && curl -L "${URL_PNPM}" -o /opt/node/bin/pnpm && sudo chmod +x /opt/node/bin/pnpm \
-  && ln -sf /opt/node/bin/pnpm /usr/local/bin/ \
-  && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee -a /etc/profile.d/path-pnpm.sh \
-  && source /etc/profile.d/path-pnpm.sh ;
-
-  type pnpm && echo "@ Version of pnpm: $(pnpm --version)" || return -1 ;
+  && chmod +x /opt/node/bin/pnpm && ln -sf /opt/node/bin/pnpm /usr/local/bin/pnpm \
+  && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' >/etc/profile.d/path-pnpm.sh ;
+  type pnpm >/dev/null 2>&1 && echo "@ Version of pnpm: $(pnpm --version)" || return 1 ;
 }
 
 setup_node_bun() {
