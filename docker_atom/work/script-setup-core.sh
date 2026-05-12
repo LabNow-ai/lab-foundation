@@ -417,14 +417,14 @@ setup_gradle() {
 setup_yq() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
-     local VER_YQ_REQ="${1:-}" \
+     local VER_YQ="" VER_YQ_REQ="${1:-}" \
   && local VERS_YQ=$(curl -sL https://github.com/mikefarah/yq/releases.atom | grep 'releases/tag' | grep -Po 'v\K[\d.]+' | sort -rV) \
   && if [ -n "${VER_YQ_REQ}" ]; then
        local VER_YQ_RE=${VER_YQ_REQ#v} \
        && VER_YQ_RE=${VER_YQ_RE//./\\.} \
-       && local VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)") \
+       && VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)")
      else
-       local VER_YQ=$(echo "${VERS_YQ}" | head -1)
+       VER_YQ=$(echo "${VERS_YQ}" | head -1)
      fi \
   && [ -n "${VER_YQ}" ] \
   && local URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
