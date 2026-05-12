@@ -15,7 +15,16 @@ setup_postgresql_client() {
 setup_duckdb() {
   local ARCH="$(uname -m)" \
   && local ARCH_DUCKDB=$([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64") \
-  && local VER_DUCKDB="${1:-$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//')}" \
+  && local VER_DUCKDB_REQ="${1:-}" \
+  && local VERS_DUCKDB=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//' | sort -rV) \
+  && if [ -n "${VER_DUCKDB_REQ}" ]; then
+       local VER_DUCKDB_RE=${VER_DUCKDB_REQ#v} \
+       && VER_DUCKDB_RE=${VER_DUCKDB_RE//./\\.} \
+       && local VER_DUCKDB=$(echo "${VERS_DUCKDB}" | grep -m1 -E "^${VER_DUCKDB_RE}([.-]|$)")
+     else
+       local VER_DUCKDB=$(echo "${VERS_DUCKDB}" | head -1)
+     fi \
+  && [ -n "${VER_DUCKDB}" ] \
   && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/duckdb_cli-linux-${ARCH_DUCKDB}.zip" \
   && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.zip" \
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \

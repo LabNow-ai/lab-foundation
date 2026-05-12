@@ -138,11 +138,11 @@ setup_java_base() {
 setup_java_maven() {
      local VER_MAVEN="${1:-3}" \
   && local ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
-  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -r) \
-  && case "${VER_MAVEN}" in
-       *.*.*) ;;
-       *) VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -E "^${VER_MAVEN}\\." | sort -rV | head -1) ;;
-     esac \
+  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -rV) \
+  && local VER_MAVEN_RE=${VER_MAVEN#v} \
+  && VER_MAVEN_RE=${VER_MAVEN_RE//./\\.} \
+  && VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -m1 -E "^${VER_MAVEN_RE}([.-]|$)") \
+  && [ -n "${VER_MAVEN}" ] \
   && local URL_MAVEN="https://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
   && echo "Downloading Maven version ${VER_MAVEN} from: ${URL_MAVEN}" \
   && install_zip "${URL_MAVEN}" \
@@ -154,17 +154,25 @@ setup_java_maven() {
 
 
 setup_node_base() {
-     local VER_NODEJS="${1:-}" \
+     local VER_NODEJS_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
   && local ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
-  && case "${VER_NODEJS}" in
-       '') VER_NODEJS=$(echo "${ATOM_NODEJS}" | head -1 | grep -Po '\d[\.\d]+') ;;
-       *.*.*) ;;
-       *) VER_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[\.\d]+' | grep -E "^${VER_NODEJS}\\." | head -1) ;;
-     esac \
-  && local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1) \
-  && local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
+  && local VERS_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_NODEJS_REQ}" ]; then
+       local VER_NODEJS_RE=${VER_NODEJS_REQ#v} \
+       && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
+       && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)") \
+       && [ -n "${VER_NODEJS}" ] \
+       && case "${VER_NODEJS_REQ}" in
+            *.*) local URL_NODEJS="https://nodejs.org/download/release/v${VER_NODEJS}/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;;
+            *)   local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;;
+          esac ;
+     else
+       local VER_NODEJS=$(echo "${VERS_NODEJS}" | head -1) \
+       && local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1) \
+       && local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;
+     fi \
   && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
   && install_tar_gz ${URL_NODEJS} \
   && mv /opt/node* /opt/node \
@@ -178,10 +186,18 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-  local VER_PNPM UNAME ARCH URL_PNPM TMPDIR ;
+  local VER_PNPM_REQ="${1:-}" UNAME ARCH URL_PNPM TMPDIR ;
   UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
-  && VER_PNPM="${1:-$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha | sort -V | tail -1)}" \
+  && local VERS_PNPM=$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha | sort -rV) \
+  && if [ -n "${VER_PNPM_REQ}" ]; then
+       local VER_PNPM_RE=${VER_PNPM_REQ#v} \
+       && VER_PNPM_RE=${VER_PNPM_RE//./\\.} \
+       && local VER_PNPM=$(echo "${VERS_PNPM}" | grep -m1 -E "^${VER_PNPM_RE}([.-]|$)")
+     else
+       local VER_PNPM=$(echo "${VERS_PNPM}" | head -1)
+     fi \
+  && [ -n "${VER_PNPM}" ] \
   && mkdir -p /opt/node/bin /opt/node/pnpm-store \
   && if [ "${VER_PNPM%%.*}" -ge 11 ]; then
        URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}.tar.gz" \
@@ -200,9 +216,19 @@ setup_node_pnpm() {
 }
 
 setup_node_bun() {
-     local VER_BUN="${1:-$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+')}" \
+     local VER_BUN_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
+  && local ATOM_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r) \
+  && local VERS_BUN=$(echo "${ATOM_BUN}" | grep -Po 'bun-v\K\d+\.\d+\.\d+' | sort -rV) \
+  && if [ -n "${VER_BUN_REQ}" ]; then
+       local VER_BUN_RE=${VER_BUN_REQ#v} \
+       && VER_BUN_RE=${VER_BUN_RE//./\\.} \
+       && local VER_BUN=$(echo "${VERS_BUN}" | grep -m1 -E "^${VER_BUN_RE}([.-]|$)")
+     else
+       local VER_BUN=$(echo "${VERS_BUN}" | head -1)
+     fi \
+  && [ -n "${VER_BUN}" ] \
   && local URL_BUN="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
   && echo "Downloading bun version ${VER_BUN} from: ${URL_BUN}" \
   && install_zip "${URL_BUN}" \
@@ -216,15 +242,19 @@ setup_node_bun() {
 
 
 setup_GO() {
-     local VER_GO="${1:-}" \
+     local VER_GO_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(dpkg --print-architecture) \
   && local ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r) \
-  && case "${VER_GO}" in
-       '') VER_GO=$(echo "${ATOM_GO}" | head -1 | grep -Po '\d[\d.]+') ;;
-       *.*.*) ;;
-       *) VER_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | grep -E "^${VER_GO}\\." | head -1) ;;
-     esac \
+  && local VERS_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_GO_REQ}" ]; then
+       local VER_GO_RE=${VER_GO_REQ#v} \
+       && VER_GO_RE=${VER_GO_RE//./\\.} \
+       && local VER_GO=$(echo "${VERS_GO}" | grep -m1 -E "^${VER_GO_RE}([.-]|$)")
+     else
+       local VER_GO=$(echo "${VERS_GO}" | head -1)
+     fi \
+  && [ -n "${VER_GO}" ] \
   && local URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
@@ -269,16 +299,20 @@ setup_R_base() {
 
 
 setup_julia() {
-     local VER_JULIA="${1:-}" \
+     local VER_JULIA_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH_1=$(uname -m) \
   && local ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
   && local ATOM_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha|beta))' | sort -r) \
-  && case "${VER_JULIA}" in
-       '') VER_JULIA=$(echo "${ATOM_JULIA}" | head -1 | grep -Po '\d[\d.]+') ;;
-       *.*.*) ;;
-       *) VER_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | grep -E "^${VER_JULIA}\\." | head -1) ;;
-     esac \
+  && local VERS_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_JULIA_REQ}" ]; then
+       local VER_JULIA_RE=${VER_JULIA_REQ#v} \
+       && VER_JULIA_RE=${VER_JULIA_RE//./\\.} \
+       && local VER_JULIA=$(echo "${VERS_JULIA}" | grep -m1 -E "^${VER_JULIA_RE}([.-]|$)")
+     else
+       local VER_JULIA=$(echo "${VERS_JULIA}" | head -1)
+     fi \
+  && [ -n "${VER_JULIA}" ] \
   && local VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2) \
   && local URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
   && echo "Downloading Julia version ${VER_JULIA} from: ${URL_JULIA}" \
@@ -294,7 +328,16 @@ setup_julia() {
 
 
 setup_lua_base() {
-    local VER_LUA="${1:-$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)')}" \
+    local VER_LUA_REQ="${1:-}" \
+ && local VERS_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+ && if [ -n "${VER_LUA_REQ}" ]; then
+      local VER_LUA_RE=${VER_LUA_REQ#v} \
+      && VER_LUA_RE=${VER_LUA_RE//./\\.} \
+      && local VER_LUA=$(echo "${VERS_LUA}" | grep -m1 -E "^${VER_LUA_RE}([.-]|$)")
+    else
+      local VER_LUA=$(echo "${VERS_LUA}" | head -1)
+    fi \
+ && [ -n "${VER_LUA}" ] \
  && local URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
@@ -309,7 +352,16 @@ setup_lua_base() {
 setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
- && local VER_LUA_ROCKS="${1:-$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1)}" \
+ && local VER_LUA_ROCKS_REQ="${1:-}" \
+ && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+ && if [ -n "${VER_LUA_ROCKS_REQ}" ]; then
+      local VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_REQ#v} \
+      && VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_RE//./\\.} \
+      && local VER_LUA_ROCKS=$(echo "${VERS_LUA_ROCKS}" | grep -m1 -E "^${VER_LUA_ROCKS_RE}([.-]|$)")
+    else
+      local VER_LUA_ROCKS=$(echo "${VERS_LUA_ROCKS}" | head -1)
+    fi \
+ && [ -n "${VER_LUA_ROCKS}" ] \
  && local URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
  && install_tar_gz $URL_LUA_ROCKS \
@@ -325,7 +377,16 @@ setup_lua_rocks() {
 setup_bazel() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
-  && local VER_BAZEL="${1:-$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' )}" \
+  && local VER_BAZEL_REQ="${1:-}" \
+  && local VERS_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_BAZEL_REQ}" ]; then
+       local VER_BAZEL_RE=${VER_BAZEL_REQ#v} \
+       && VER_BAZEL_RE=${VER_BAZEL_RE//./\\.} \
+       && local VER_BAZEL=$(echo "${VERS_BAZEL}" | grep -m1 -E "^${VER_BAZEL_RE}([.-]|$)")
+     else
+       local VER_BAZEL=$(echo "${VERS_BAZEL}" | head -1)
+     fi \
+  && [ -n "${VER_BAZEL}" ] \
   && local URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
   && /tmp/bazel.sh && rm /tmp/bazel.sh ;
@@ -335,7 +396,16 @@ setup_bazel() {
 
 
 setup_gradle() {
-     local VER_GRADLE="${1:-$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | head -1 | grep -Po '\d[\d.]+' )}" \
+     local VER_GRADLE_REQ="${1:-}" \
+  && local VERS_GRADLE=$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_GRADLE_REQ}" ]; then
+       local VER_GRADLE_RE=${VER_GRADLE_REQ#v} \
+       && VER_GRADLE_RE=${VER_GRADLE_RE//./\\.} \
+       && local VER_GRADLE=$(echo "${VERS_GRADLE}" | grep -m1 -E "^${VER_GRADLE_RE}([.-]|$)")
+     else
+       local VER_GRADLE=$(echo "${VERS_GRADLE}" | head -1)
+     fi \
+  && [ -n "${VER_GRADLE}" ] \
   && local URL_GRADLE="https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
   && mv /opt/gradle* /opt/gradle \
   && ln -sf /opt/gradle/bin/gradle /usr/bin ;
@@ -347,7 +417,16 @@ setup_gradle() {
 setup_yq() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
-     local VER_YQ="${1:-$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+')}" \
+     local VER_YQ_REQ="${1:-}" \
+  && local VERS_YQ=$(curl -sL https://github.com/mikefarah/yq/releases.atom | grep 'releases/tag' | grep -Po 'v\K[\d.]+' | sort -rV) \
+  && if [ -n "${VER_YQ_REQ}" ]; then
+       local VER_YQ_RE=${VER_YQ_REQ#v} \
+       && VER_YQ_RE=${VER_YQ_RE//./\\.} \
+       && local VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)") \
+     else
+       local VER_YQ=$(echo "${VERS_YQ}" | head -1)
+     fi \
+  && [ -n "${VER_YQ}" ] \
   && local URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
   && echo "Installing yq v${VER_YQ} for arch ${ARCH} from: ${URL_YQ}" \
   && curl -fSL "${URL_YQ}" -o /tmp/yq \

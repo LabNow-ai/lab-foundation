@@ -3,7 +3,16 @@ source /opt/utils/script-utils.sh
 
 setup_tini() {
      ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
-  && VER_TINI="${1:-$(curl -sL https://github.com/krallin/tini/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' )}" \
+  && local VER_TINI_REQ="${1:-}" \
+  && local VERS_TINI=$(curl -sL https://github.com/krallin/tini/releases.atom | grep 'releases/tag' | grep -Po '\d[\d.]+' | sort -rV) \
+  && if [ -n "${VER_TINI_REQ}" ]; then
+       local VER_TINI_RE=${VER_TINI_REQ#v} \
+       && VER_TINI_RE=${VER_TINI_RE//./\\.} \
+       && local VER_TINI=$(echo "${VERS_TINI}" | grep -m1 -E "^${VER_TINI_RE}([.-]|$)")
+     else
+       local VER_TINI=$(echo "${VERS_TINI}" | head -1)
+     fi \
+  && [ -n "${VER_TINI}" ] \
   && URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
   && echo "Downloading Tini ${VER_TINI} from ${URL_TINI}" \
   && curl -o /usr/bin/tini -sL $URL_TINI && chmod +x /usr/bin/tini ;
@@ -18,7 +27,16 @@ setup_tini() {
 setup_supervisord() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
-  && VER_SUPERVISORD="${1:-$(curl -sL https://github.com/LabNow-ai/supervisord/releases.atom | grep "releases/tag" | head -1 | grep -Po '(\d[\d|.]+)')}" \
+  && local VER_SUPERVISORD_REQ="${1:-}" \
+  && local VERS_SUPERVISORD=$(curl -sL https://github.com/LabNow-ai/supervisord/releases.atom | grep "releases/tag" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && if [ -n "${VER_SUPERVISORD_REQ}" ]; then
+       local VER_SUPERVISORD_RE=${VER_SUPERVISORD_REQ#v} \
+       && VER_SUPERVISORD_RE=${VER_SUPERVISORD_RE//./\\.} \
+       && local VER_SUPERVISORD=$(echo "${VERS_SUPERVISORD}" | grep -m1 -E "^${VER_SUPERVISORD_RE}([.-]|$)")
+     else
+       local VER_SUPERVISORD=$(echo "${VERS_SUPERVISORD}" | head -1)
+     fi \
+  && [ -n "${VER_SUPERVISORD}" ] \
   && URL_SUPERVISORD="https://github.com/LabNow-ai/supervisord/releases/download/v${VER_SUPERVISORD}/supervisord_${VER_SUPERVISORD}_${UNAME}_${ARCH}.tar.gz" \
   && echo "Downloading Supervisord ${VER_SUPERVISORD} from ${URL_SUPERVISORD}" \
   && curl -o /tmp/TMP.tgz -sL $URL_SUPERVISORD && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
