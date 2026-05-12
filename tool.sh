@@ -57,7 +57,7 @@ push_image() {
 }
 
 clear_images() {
-    KEYWORD=${1:-'days ago\|weeks ago\|months ago\|years ago'}; # if no keyword is provided, clear all images build days ago
+    KEYWORD=${1:-'days ago\|weeks ago\|months ago\|years ago'}; # if no keyword is provided, clear all images built days ago
     IMGS_1=$(docker images | grep "${KEYWORD}" | awk '{print $1 ":" $2}') ;
     IMGS_2=$(docker images | grep "${KEYWORD}" | awk '{print $3}') ;
 

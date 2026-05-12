@@ -155,16 +155,16 @@ setup_java_maven() {
 
 
 setup_node_base() {
-     local VER_NODEJS_MAJOR="${1-}" \
+     local VER_NODEJS="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
   && local ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
-  && if [ -n "${VER_NODEJS_MAJOR}" ]; then
-       local VER_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[.\d]+' | grep -E "^${VER_NODEJS_MAJOR}\\." | head -1)
-     else
-       local VER_NODEJS=$(echo "${ATOM_NODEJS}" | head -1 | grep -Po '\d[.\d]+')
-       local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1)
-     fi \
+  && case "${VER_NODEJS}" in
+       '') VER_NODEJS=$(echo "${ATOM_NODEJS}" | head -1 | grep -Po '\d[\.\d]+') ;;
+       *.*.*) ;;
+       *) VER_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[\.\d]+' | grep -E "^${VER_NODEJS}\\." | head -1) ;;
+     esac \
+  && local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1) \
   && local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
   && install_tar_gz ${URL_NODEJS} \
@@ -217,15 +217,15 @@ setup_node_bun() {
 
 
 setup_GO() {
-     local VER_GO_MAJOR="${1-}" \
+     local VER_GO="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(dpkg --print-architecture) \
-  && local ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r ) \
-  && if [ -n "${VER_GO_MAJOR}" ]; then
-       local VER_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | grep -E "^${VER_GO_MAJOR}\\." | head -1)
-     else
-       local VER_GO=$(echo "${ATOM_GO}" | head -1 | grep -Po '\d[\d.]+')
-     fi \
+  && local ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r) \
+  && case "${VER_GO}" in
+       '') VER_GO=$(echo "${ATOM_GO}" | head -1 | grep -Po '\d[\d.]+') ;;
+       *.*.*) ;;
+       *) VER_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | grep -E "^${VER_GO}\\." | head -1) ;;
+     esac \
   && local URL_GO="https://dl.google.com/go/go${VER_GO}.${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading golang version ${VER_GO} from: ${URL_GO}" \
   && install_tar_gz "${URL_GO}" go \
@@ -270,17 +270,17 @@ setup_R_base() {
 
 
 setup_julia() {
-     local VER_JULIA_MAJOR="${1-}" \
+     local VER_JULIA="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH_1=$(uname -m) \
   && local ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
   && local ATOM_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha|beta))' | sort -r) \
-  && if [ -n "${VER_JULIA_MAJOR}" ]; then
-       local VER_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | grep -E "^${VER_JULIA_MAJOR}\\." | head -1)
-     else
-       local VER_JULIA=$(echo "${ATOM_JULIA}" | head -1 | grep -Po '\d[\d.]+')
-     fi \
-  && local VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2 ) \
+  && case "${VER_JULIA}" in
+       '') VER_JULIA=$(echo "${ATOM_JULIA}" | head -1 | grep -Po '\d[\d.]+') ;;
+       *.*.*) ;;
+       *) VER_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | grep -E "^${VER_JULIA}\\." | head -1) ;;
+     esac \
+  && local VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2) \
   && local URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
   && echo "Downloading Julia version ${VER_JULIA} from: ${URL_JULIA}" \
   && install_tar_gz $URL_JULIA \
@@ -336,7 +336,7 @@ setup_bazel() {
 
 
 setup_gradle() {
-     local VER_GRADLE=$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | head -1 | grep -Po '\d[\d.]+' ) \
+     local VER_GRADLE="${1:-$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | head -1 | grep -Po '\d[\d.]+' )}" \
   && local URL_GRADLE="https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
   && mv /opt/gradle* /opt/gradle \
   && ln -sf /opt/gradle/bin/gradle /usr/bin ;
