@@ -15,12 +15,13 @@ setup_postgresql_client() {
 setup_duckdb() {
   local ARCH="$(uname -m)" \
   && local ARCH_DUCKDB=$([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64") \
-  && local VER_DUCKDB="$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')" \
-  && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/${VER_DUCKDB}/duckdb_cli-linux-${ARCH_DUCKDB}.zip" \
+  && local VER_DUCKDB="${1:-$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//')}" \
+  && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/duckdb_cli-linux-${ARCH_DUCKDB}.zip" \
   && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.zip" \
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
   && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
   && unzip -q "${TMP_FILE}" -d /tmp \
+  && mkdir -pv /opt/bin \
   && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
   && rm -f "${TMP_FILE}" /tmp/duckdb ;
 

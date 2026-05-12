@@ -29,7 +29,7 @@ SHELL ["/bin/bash", "--login", "-o", "pipefail", "-c"]
 COPY work /opt/utils/
 
 RUN set -eux \
- && source /opt/utils/script-setup.sh \
+ && source /opt/utils/script-setup-core.sh \
  # -----------------------------
  && echo "NodeJS is required to build some components like JupyterLab Extensions later" \
  && for profile in $(echo $ARG_PROFILE_NODEJS | tr "," "\n") ; do ( setup_node_${profile} ) ; done \

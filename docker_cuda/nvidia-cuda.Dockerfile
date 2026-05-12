@@ -19,6 +19,6 @@ RUN set -eux && echo ${CUDA_VERSION} && nvcc --version \
  && cp -rf /tmp/python3-defaults-master-debpython/debpython/* /usr/share/python3/debpython/ \
  && rm -rf /tmp/python3-defaults-master-debpython \
  # Setup nvtop
- && source /opt/utils/script-setup.sh \
+ && source /opt/utils/script-setup-core.sh \
  && setup_nvtop \
  && install__clean

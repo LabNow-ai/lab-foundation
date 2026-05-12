@@ -179,13 +179,10 @@ setup_node_base() {
 }
 
 setup_node_pnpm() {
-  local VER_PNPM_MAJOR="${1:-}" UNAME ARCH VER_PNPM URL_PNPM TMPDIR FILTER ;
+  local VER_PNPM UNAME ARCH URL_PNPM TMPDIR ;
   UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
-  && FILTER="${VER_PNPM_MAJOR:+^${VER_PNPM_MAJOR}\\.}" \
-  && VER_PNPM=$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha \
-       | { [ -n "${FILTER}" ] && grep -E "${FILTER}" || cat ; } | sort -V | tail -1) \
-  && [ -n "${VER_PNPM}" ] \
+  && VER_PNPM="${1:-$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha | sort -V | tail -1)}" \
   && mkdir -p /opt/node/bin /opt/node/pnpm-store \
   && if [ "${VER_PNPM%%.*}" -ge 11 ]; then
        URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}.tar.gz" \
@@ -204,15 +201,9 @@ setup_node_pnpm() {
 }
 
 setup_node_bun() {
-     local VER_BUN_MAJOR="${1-}" \
+     local VER_BUN="${1:-$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+')}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
-  && local ATOM_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r) \
-  && if [ -n "${VER_BUN_MAJOR}" ]; then
-       local VER_BUN=$(echo "${ATOM_BUN}" | grep -Po 'bun-v\K\d+\.\d+\.\d+' | grep -E "^${VER_BUN_MAJOR}\\." | head -1)
-     else
-       local VER_BUN=$(echo "${ATOM_BUN}" | head -1 | grep -Po 'bun-v\K\d+\.\d+\.\d+')
-     fi \
   && local URL_BUN="https://github.com/oven-sh/bun/releases/download/bun-v${VER_BUN}/bun-${UNAME}-${ARCH}.zip" \
   && echo "Downloading bun version ${VER_BUN} from: ${URL_BUN}" \
   && install_zip "${URL_BUN}" \
@@ -335,7 +326,7 @@ setup_lua_rocks() {
 setup_bazel() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
-  && local VER_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
+  && local VER_BAZEL="${1:-$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' )}" \
   && local URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
   && /tmp/bazel.sh && rm /tmp/bazel.sh ;
@@ -357,7 +348,7 @@ setup_gradle() {
 setup_yq() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
-     local VER_YQ=$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+') \
+     local VER_YQ="${1:-$(curl -sL -o /dev/null -w "%{url_effective}" https://github.com/mikefarah/yq/releases/latest | grep -oP 'v\K[\d.]+')}" \
   && local URL_YQ="https://github.com/mikefarah/yq/releases/download/v${VER_YQ}/yq_linux_${ARCH}" \
   && echo "Installing yq v${VER_YQ} for arch ${ARCH} from: ${URL_YQ}" \
   && curl -fSL "${URL_YQ}" -o /tmp/yq \

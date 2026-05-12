@@ -3,7 +3,7 @@ source /opt/utils/script-utils.sh
 
 setup_tini() {
      ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
-  && VER_TINI=$(curl -sL https://github.com/krallin/tini/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
+  && VER_TINI="${1:-$(curl -sL https://github.com/krallin/tini/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' )}" \
   && URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
   && echo "Downloading Tini ${VER_TINI} from ${URL_TINI}" \
   && curl -o /usr/bin/tini -sL $URL_TINI && chmod +x /usr/bin/tini ;
@@ -18,7 +18,7 @@ setup_tini() {
 setup_supervisord() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
-  && VER_SUPERVISORD=$(curl -sL https://github.com/LabNow-ai/supervisord/releases.atom | grep "releases/tag" | head -1 | grep -Po '(\d[\d|.]+)') \
+  && VER_SUPERVISORD="${1:-$(curl -sL https://github.com/LabNow-ai/supervisord/releases.atom | grep "releases/tag" | head -1 | grep -Po '(\d[\d|.]+)')}" \
   && URL_SUPERVISORD="https://github.com/LabNow-ai/supervisord/releases/download/v${VER_SUPERVISORD}/supervisord_${VER_SUPERVISORD}_${UNAME}_${ARCH}.tar.gz" \
   && echo "Downloading Supervisord ${VER_SUPERVISORD} from ${URL_SUPERVISORD}" \
   && curl -o /tmp/TMP.tgz -sL $URL_SUPERVISORD && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \

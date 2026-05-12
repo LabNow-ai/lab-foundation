@@ -13,7 +13,7 @@ ENV CONDA_PREFIX=/opt/conda
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-RUN set -eux && source /opt/utils/script-setup.sh && source /opt/utils/script-setup-sys.sh \
+RUN set -eux && source /opt/utils/script-setup-core.sh && source /opt/utils/script-setup-sys.sh \
  && export PATH=${CONDA_PREFIX}/bin:$PATH \
  && install_apt /opt/utils/install_list_base.apt \
  && echo "Install tini:" && setup_tini \

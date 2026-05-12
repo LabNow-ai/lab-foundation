@@ -37,14 +37,6 @@ build_image_no_tag() {
     echo "${IMG_PREFIX_DST}/${IMG}:${TAG}"
 }
 
-build_image_common() {
-    echo "$@" ;
-    IMG=$1; TAG=$2; FILE=$3; shift 3; VER=$(date +%Y.%m%d.%H%M)${TAG_SUFFIX}; WORKDIR="$(dirname $FILE)";
-    docker build --compress --force-rm=true -t "${IMG_PREFIX_DST}/${IMG}:${TAG}" -f "$FILE" --build-arg "BASE_NAMESPACE=${IMG_PREFIX_SRC}" "$@" "${WORKDIR}" >&2
-    docker tag "${IMG_PREFIX_DST}/${IMG}:${TAG}" "${IMG_PREFIX_DST}/${IMG}:${VER}" >&2
-    echo "${IMG_PREFIX_DST}/${IMG}:${TAG}"
-}
-
 alias_image() {
     IMG_1=$1; TAG_1=$2; IMG_2=$3; TAG_2=$4; shift 4; VER=$(date +%Y.%m%d.%H%M)${TAG_SUFFIX};
     docker tag "${IMG_PREFIX_DST}/${IMG_1}:${TAG_1}" "${IMG_PREFIX_DST}/${IMG_2}:${TAG_2}" >&2
@@ -70,7 +62,7 @@ clear_images() {
     IMGS_2=$(docker images | grep "${KEYWORD}" | awk '{print $3}') ;
 
     for IMG in $(echo "$IMGS_1 $IMGS_2" | tr " " "\n") ; do
-      docker rmi "${IMG}" || true; status=$?; echo "[${status}] image removed > ${IMG}";
+      docker rmi "${IMG}" ; status=$?; echo "[${status}] image removed > ${IMG}";
     done
     docker image prune --force && docker images ;
 }
