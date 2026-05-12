@@ -160,21 +160,15 @@ setup_node_base() {
   && local ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
   && local VERS_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_NODEJS_REQ}" ]; then
-       local VER_NODEJS_RE=${VER_NODEJS_REQ#v} \
-       && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
-       && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)") \
-       && [ -n "${VER_NODEJS}" ] \
-       && case "${VER_NODEJS_REQ}" in
-            *.*) local URL_NODEJS="https://nodejs.org/download/release/v${VER_NODEJS}/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;;
-            *)   local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;;
-          esac ;
+          local VER_NODEJS_RE=${VER_NODEJS_REQ#v} && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
+       && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)")
      else
-       local VER_NODEJS=$(echo "${VERS_NODEJS}" | head -1) \
-       && local VER_NODEJS_MAJOR=$(echo "${VER_NODEJS}" | cut -d '.' -f1) \
-       && local URL_NODEJS="https://nodejs.org/download/release/latest-v${VER_NODEJS_MAJOR}.x/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" ;
+          local VER_NODEJS=$(echo "${VERS_NODEJS}" | head -1)
      fi \
+  && [ -n "${VER_NODEJS}" ] \
+  && local URL_NODEJS="https://nodejs.org/dist/v${VER_NODEJS}/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.xz" \
   && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
-  && install_tar_gz ${URL_NODEJS} \
+  && install_tar_xz "${URL_NODEJS}" \
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
@@ -187,7 +181,7 @@ setup_node_base() {
 
 setup_node_pnpm() {
   local VER_PNPM_REQ="${1:-}" UNAME ARCH URL_PNPM TMPDIR ;
-  UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
   && local VERS_PNPM=$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha | sort -rV) \
   && if [ -n "${VER_PNPM_REQ}" ]; then
@@ -420,8 +414,7 @@ setup_yq() {
      local VER_YQ="" VER_YQ_REQ="${1:-}" \
   && local VERS_YQ=$(curl -sL https://github.com/mikefarah/yq/releases.atom | grep 'releases/tag' | grep -Po 'v\K[\d.]+' | sort -rV) \
   && if [ -n "${VER_YQ_REQ}" ]; then
-       local VER_YQ_RE=${VER_YQ_REQ#v} \
-       && VER_YQ_RE=${VER_YQ_RE//./\\.} \
+       local VER_YQ_RE=${VER_YQ_REQ#v} && VER_YQ_RE=${VER_YQ_RE//./\\.} \
        && VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)")
      else
        VER_YQ=$(echo "${VERS_YQ}" | head -1)
@@ -432,7 +425,7 @@ setup_yq() {
   && curl -fSL "${URL_YQ}" -o /tmp/yq \
   && install -m 0755 -D /tmp/yq /opt/bin/yq \
   && ln -sf /opt/bin/yq /usr/bin/yq \
-  && rm -f /tmp/yq
+  && rm -f /tmp/yq ;
 
   type yq && echo "@ Installed yq: $(yq --version)"
 }
