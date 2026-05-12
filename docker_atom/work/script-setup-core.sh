@@ -347,7 +347,7 @@ setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
  && local VER_LUA_ROCKS_REQ="${1:-}" \
- && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+ && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -Po '\d+\.\d+(\.\d+)?' | sort -rV) \
  && if [ -n "${VER_LUA_ROCKS_REQ}" ]; then
       local VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_REQ#v} \
       && VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_RE//./\\.} \
