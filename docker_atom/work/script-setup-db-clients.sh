@@ -8,7 +8,6 @@ setup_postgresql_client() {
   echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
   # will download ~9MB files and use ~55MB disk after installation
   sudo apt-get update && sudo apt-get -y install "postgresql-client-${VER_PG}"
-
   type psql && echo "@ Version of psql client: $(psql --version)" || return -1
 }
 
@@ -33,7 +32,6 @@ setup_duckdb() {
   && mkdir -pv /opt/bin \
   && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
   && rm -f "${TMP_FILE}" /tmp/duckdb ;
-
   /opt/bin/duckdb --version && echo "@ DuckDB installed" || return -1 ;
 }
 

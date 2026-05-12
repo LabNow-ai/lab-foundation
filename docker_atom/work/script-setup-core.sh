@@ -14,7 +14,6 @@ setup_mamba() {
   && printf "channels:\n"       | sudo tee -a /etc/conda/.condarc \
   && printf "  - conda-forge\n" | sudo tee -a /etc/conda/.condarc \
   && cat /etc/conda/.condarc ;
-  
   type mamba && echo "@ Version of mamba: $(mamba info)" || return -1 ;
 }
 
@@ -92,7 +91,6 @@ setup_nvtop() {
   && make && sudo make install \
   && cd "${DIRECTORY}" && rm -rf /tmp/nvtop \
   && sudo apt-get -qq remove -y libncurses5-dev libdrm-dev libsystemd-dev libudev-dev ;
-  
   type nvtop && echo "Version of nvtop: $(nvtop --version)" || return -1 ;
 }
 
@@ -129,7 +127,6 @@ setup_java_base() {
 
   echo "Installing JDK version ${VER_JDK} from: ${URL_JDK_DOWNLOAD}" ;
   install_tar_gz "${URL_JDK_DOWNLOAD}" && mv /opt/jdk* /opt/jdk && ln -sf /opt/jdk/bin/* /usr/bin/ ;
-
   type java  && echo "@ Version of Java (java):  $(java -version)"  || return -1 ;
   type javac && echo "@ Version of Java (javac): $(javac -version)" || return -1 ;
 }
@@ -148,7 +145,6 @@ setup_java_maven() {
   && install_zip "${URL_MAVEN}" \
   && mv "/opt/apache-maven-${VER_MAVEN}" /opt/maven \
   && ln -sf /opt/maven/bin/mvn* /usr/bin/ ;
-
   type mvn && echo "@ Version of Maven: $(mvn --version)" || return -1 ;
 }
 
@@ -166,9 +162,9 @@ setup_node_base() {
           local VER_NODEJS=$(echo "${VERS_NODEJS}" | head -1)
      fi \
   && [ -n "${VER_NODEJS}" ] \
-  && local URL_NODEJS="https://nodejs.org/dist/v${VER_NODEJS}/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.xz" \
+  && local URL_NODEJS="https://nodejs.org/dist/v${VER_NODEJS}/node-v${VER_NODEJS}-${UNAME}-${ARCH}.tar.gz" \
   && echo "Downloading NodeJS version ${VER_NODEJS} from: ${URL_NODEJS}" \
-  && install_tar_xz "${URL_NODEJS}" \
+  && install_tar_gz "${URL_NODEJS}" \
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
@@ -230,7 +226,6 @@ setup_node_bun() {
   && sudo ln -sf /opt/bun/bun /usr/bin/ \
   && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh \
   && source /etc/profile.d/path-bun.sh ;
-
   type bun && echo "@ Version of bun: $(bun -v)" || return $? ;
 }
 
@@ -258,7 +253,6 @@ setup_GO() {
   && echo 'export GOPATH="$GOROOT/path"'  | sudo tee -a /etc/profile.d/path-go.sh \
   && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' | sudo tee -a /etc/profile.d/path-go.sh \
   && source /etc/profile.d/path-go.sh ;
-  
   type go && echo "@ Version of golang: $(go version)" || return -1 ;
 }
 
@@ -272,7 +266,6 @@ setup_rust() {
   && echo 'export RUSTUP_HOME="/opt/rust"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && source /etc/profile.d/path-rust.sh ;
-
   type rustup && echo "@ Version of rustup: $(rustup --version)" || return -1 ;
   type rustc  && echo "@ Version of rustc:  $(rustc  --version)" || return -1 ;
 }
@@ -287,7 +280,6 @@ setup_R_base() {
   && R -e "install.packages(c('devtools'),clean=T,quiet=T);" \
   && R -e "install.packages(c('devtools'),clean=T,quiet=F);" \
   && ( type java && type R && R CMD javareconf || true ) ;
-  
   type R && echo "@ Version of R: $(R --version)" || return -1 ;
 }
 
@@ -316,7 +308,6 @@ setup_julia() {
   && sudo mkdir -pv /opt/julia/pkg \
   && echo "import Libdl; push!(Libdl.DL_LOAD_PATH, \"/opt/conda/lib\")" | sudo tee -a /opt/julia/etc/julia/startup.jl \
   && echo "DEPOT_PATH[1]=\"/opt/julia/pkg\""                            | sudo tee -a /opt/julia/etc/julia/startup.jl ;
-  
   type julia && echo "@ Version of Julia: $(julia --version)" || return -1 ;
 }
 
@@ -339,7 +330,6 @@ setup_lua_base() {
  && sudo make linux test && sudo make install INSTALL_TOP=${LUA_HOME:-"/opt/lua"} \
  && sudo ln -sf ${LUA_HOME:-"/opt/lua"}/bin/lua* /usr/bin/ \
  && rm -rf /tmp/lua ;
-
  type lua && echo "@ Version of LUA installed: $(lua -v)" || return -1 ;
 }
 
@@ -363,7 +353,6 @@ setup_lua_rocks() {
  && sudo ./configure --prefix=${LUA_HOME:-"/opt/lua"} --with-lua-include=${LUA_HOME:-"/opt/lua"}/include && sudo make install \
  && sudo ln -sf /opt/lua/bin/lua* /usr/bin/ \
  && rm -rf /tmp/luarocks ;
-
  type luarocks && echo "@ Version of luarocks: $(luarocks --version)" || return -1 ;
 }
 
@@ -384,7 +373,6 @@ setup_bazel() {
   && local URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
   && /tmp/bazel.sh && rm /tmp/bazel.sh ;
-  
   type bazel && echo "@ Version of bazel: $(bazel --version)" || return -1 ;
 }
 
@@ -403,7 +391,6 @@ setup_gradle() {
   && local URL_GRADLE="https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
   && mv /opt/gradle* /opt/gradle \
   && ln -sf /opt/gradle/bin/gradle /usr/bin ;
-  
   type gradle && echo "@ Version of gradle: $(gradle --version)" || return -1 ;
 }
 
@@ -426,6 +413,5 @@ setup_yq() {
   && install -m 0755 -D /tmp/yq /opt/bin/yq \
   && ln -sf /opt/bin/yq /usr/bin/yq \
   && rm -f /tmp/yq ;
-
-  type yq && echo "@ Installed yq: $(yq --version)"
+  type yq && echo "@ Installed yq: $(yq --version)" ;
 }

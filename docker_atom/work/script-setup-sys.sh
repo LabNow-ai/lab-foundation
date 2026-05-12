@@ -16,7 +16,6 @@ setup_tini() {
   && URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
   && echo "Downloading Tini ${VER_TINI} from ${URL_TINI}" \
   && curl -o /usr/bin/tini -sL $URL_TINI && chmod +x /usr/bin/tini ;
-
   type tini && echo "@ Version of tini: $(tini --version)" || return -1 ;
   # ref: https://cloud-atlas.readthedocs.io/zh-cn/latest/docker/init/docker_tini.html
   # to run multi-proces with tini: use a bash script ends with the following code
@@ -41,7 +40,6 @@ setup_supervisord() {
   && echo "Downloading Supervisord ${VER_SUPERVISORD} from ${URL_SUPERVISORD}" \
   && curl -o /tmp/TMP.tgz -sL $URL_SUPERVISORD && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
   && mkdir -pv /opt/bin/ && mv /tmp/supervisord /opt/bin/ && ln -sf /opt/bin/supervisord /usr/local/bin/ ;
-
   type supervisord && echo "@ Version of supervisord: $(supervisord version)" || return -1 ;
 }
 
