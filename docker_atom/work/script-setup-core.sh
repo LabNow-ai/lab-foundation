@@ -136,14 +136,13 @@ setup_java_base() {
 
 
 setup_java_maven() {
-     local VER_MAVEN_MAJOR="${1-3}" \
+     local VER_MAVEN="${1:-3}" \
   && local ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
   && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -r) \
-  && if [ -n "${VER_MAVEN_MAJOR}" ]; then
-       local VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -E "^${VER_MAVEN_MAJOR}\\." | sort -rV | head -1)
-     else
-       local VER_MAVEN=$(echo "${VERS_MAVEN}" | sort -rV | head -1)
-     fi \
+  && case "${VER_MAVEN}" in
+       *.*.*) ;;
+       *) VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -E "^${VER_MAVEN}\\." | sort -rV | head -1) ;;
+     esac \
   && local URL_MAVEN="https://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
   && echo "Downloading Maven version ${VER_MAVEN} from: ${URL_MAVEN}" \
   && install_zip "${URL_MAVEN}" \
@@ -295,7 +294,7 @@ setup_julia() {
 
 
 setup_lua_base() {
-    local VER_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)') \
+    local VER_LUA="${1:-$(curl -sL https://www.lua.org/download.html | grep "cd lua" | head -1 | grep -Po '(\d[\d|.]+)')}" \
  && local URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
@@ -310,7 +309,7 @@ setup_lua_base() {
 setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
- && local VER_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1) \
+ && local VER_LUA_ROCKS="${1:-$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | head -1 | grep -Po '(\d[\d|.]+)' | head -1)}" \
  && local URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
  && install_tar_gz $URL_LUA_ROCKS \
