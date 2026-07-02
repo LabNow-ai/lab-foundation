@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
   REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
@@ -26,13 +29,14 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+  TZ: Asia/Shanghai
 
 jobs:
   job-postgres-17:
     name: 'postgres-17,postgres-17-ext'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=17
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -46,7 +50,7 @@ jobs:
     name: 'postgres-16,postgres-16-ext'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=16
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -60,7 +64,7 @@ jobs:
     name: 'postgres-18'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=18
           build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
@@ -75,7 +79,7 @@ jobs:
     needs: ["job-postgres-17", "job-postgres-16", "job-postgres-18"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}

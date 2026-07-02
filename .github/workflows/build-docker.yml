@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
   REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
@@ -26,13 +29,14 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+  TZ: Asia/Shanghai
 
 jobs:
   job-base:
     name: 'atom,base,python-3.13'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image atom latest docker_atom/atom.Dockerfile && push_image
@@ -45,7 +49,7 @@ jobs:
     needs: 'job-base'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
@@ -58,7 +62,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image core latest  docker_core/core.Dockerfile \
@@ -74,7 +78,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image py-data latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database" && push_image
 
   job-py-chem:
@@ -82,7 +86,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image py-chem latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,chem,torch" && push_image
 
   job-py-std:
@@ -90,7 +94,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image py-std  latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,database,nlp,cv,chem" && push_image
 
   job-py-jdk:
@@ -98,7 +102,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image py-jdk  latest docker_core/core.Dockerfile \
@@ -111,7 +115,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image r-base latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_R=base" && push_image
 
   job-r-std:
@@ -119,7 +123,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image r-std latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_R=base,datascience" --build-arg "ARG_PROFILE_JAVA=base" && push_image
 
   job-node:
@@ -127,7 +131,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image node latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_NODEJS=base" && push_image
 
   job-bun:
@@ -135,7 +139,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image bun  latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_NODEJS=bun" && push_image
 
 
@@ -144,7 +148,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image jdk-21 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=21"
@@ -158,7 +162,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image julia latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JULIA=base"  && push_image
 
   job-go:
@@ -166,7 +170,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image go       latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_GO=base"
@@ -179,7 +183,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: source ./tool.sh && build_image rust latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_RUST=base"    && push_image
 
   job-data-science-stack:
@@ -187,7 +191,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image data-science-stack latest  docker_core/core.Dockerfile \
@@ -202,7 +206,7 @@ jobs:
     needs: job-base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image full-stack latest  docker_core/core.Dockerfile \
@@ -221,7 +225,7 @@ jobs:
     needs: ["job-base"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
@@ -238,7 +242,7 @@ jobs:
     needs: ["job-docker_kit", "job-full-stack", "job-core"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}

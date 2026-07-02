@@ -26,6 +26,10 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+  TZ: Asia/Shanghai
+
+permissions:
+  contents: read
 
 jobs:
   # cuda docker image tags: https://hub.docker.com/r/nvidia/cuda/tags
@@ -39,7 +43,7 @@ jobs:
     name: 'cuda_12.8,cuda,nvidia-cuda'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image_no_tag nvidia-cuda 12.8.1-cudnn-devel-ubuntu24.04 docker_atom/atom.Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
@@ -52,7 +56,7 @@ jobs:
     name: 'cuda_12.6'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image_no_tag nvidia-cuda 12.6.3-cudnn-devel-ubuntu24.04 docker_atom/atom.Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.6.3-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
@@ -67,7 +71,7 @@ jobs:
     needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image tf2-cuda126 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
@@ -79,7 +83,7 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image torch-cuda128 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
@@ -91,7 +95,7 @@ jobs:
     needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
           build_image paddle-cuda126 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
@@ -104,7 +108,7 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image py-nlp-cuda128 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
@@ -116,7 +120,7 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image py-cv   latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,cv"
@@ -128,7 +132,7 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && free_diskspace && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image full-cuda-12.8 latest docker_core/core.Dockerfile \
@@ -144,7 +148,7 @@ jobs:
     name: 'nvidia-ctk'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="docker.io/library"
           build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile		&& push_image
@@ -155,7 +159,7 @@ jobs:
     needs: ["job-core-cuda", "job-py-cv", "job-py-nlp", "job-torch_cuda128", "job-nvidia-ctk"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
