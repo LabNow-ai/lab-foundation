@@ -4,11 +4,9 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   pull_request:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   workflow_dispatch:  # Allows you to run this workflow manually from the Actions tab
 
 concurrency:
@@ -16,6 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  TZ: Asia/Shanghai
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
   REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
   REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
@@ -26,7 +25,6 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
-  TZ: Asia/Shanghai
 
 permissions:
   contents: read
@@ -155,7 +153,7 @@ jobs:
 
 
   ## Sync all images in this build (listed by "names") to mirror registry.
-  sync_images:
+  job-sync-images:
     needs: ["job-core-cuda", "job-py-cv", "job-py-nlp", "job-torch_cuda128", "job-nvidia-ctk"]
     runs-on: ubuntu-latest
     steps:

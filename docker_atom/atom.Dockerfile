@@ -1,7 +1,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 # latest # default value: Latest LTS version of Ubuntu (https://hub.docker.com/_/ubuntu)
-ARG BASE_IMG="ubuntu:noble"
+ARG BASE_IMG="ubuntu:latest"
 FROM ${BASE_IMG}
 
 LABEL maintainer="postmaster@labnow.ai"

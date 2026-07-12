@@ -4,11 +4,9 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   pull_request:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   workflow_dispatch:  # Allows you to run this workflow manually from the Actions tab
 
 concurrency:
@@ -19,6 +17,7 @@ permissions:
   contents: read
 
 env:
+  TZ: Asia/Shanghai
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
   REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
   REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
@@ -29,7 +28,6 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
-  TZ: Asia/Shanghai
 
 jobs:
   job-postgres-17:
@@ -71,11 +69,12 @@ jobs:
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
-          echo "Skip PG 18-ext build as many extension are not yet available for PG 18..."
+          build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
+          push_image  postgres-
 
 
   ## Sync all images in this build (listed by "names") to mirror registry.
-  sync_images:
+  job-sync-images:
     needs: ["job-postgres-17", "job-postgres-16", "job-postgres-18"]
     runs-on: ubuntu-latest
     steps:
