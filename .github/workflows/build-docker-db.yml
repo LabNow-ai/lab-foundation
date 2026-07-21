@@ -30,20 +30,6 @@ env:
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
 
 jobs:
-  job-postgres-17:
-    name: 'postgres-17,postgres-17-ext'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: |
-          source ./tool.sh && export PG_MAJOR=17
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
-          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
-          push_image  postgres-
-          build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
-          push_image  postgres-
-
   job-postgres-16:
     name: 'postgres-16,postgres-16-ext'
     runs-on: ubuntu-latest
@@ -51,7 +37,21 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=16
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
+          export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
+          build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
+          push_image  postgres-
+          build_image postgres-${PG_MAJOR}-ext latest docker_db_postgres/postgres-ext.Dockerfile --build-arg BASE_IMG=postgres-${PG_MAJOR}
+          push_image  postgres-
+
+  job-postgres-17:
+    name: 'postgres-17,postgres-17-ext'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          source ./tool.sh && export PG_MAJOR=17
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=18
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
