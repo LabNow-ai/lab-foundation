@@ -17,7 +17,7 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && envsubst < /opt/utils/install-list-pgext.tpl.apt > /opt/utils/install-list-pgext.apt \
  && rm -rf /opt/utils/install-list-pgext.tpl.apt \
  ## Install extensions: install by apt
- && echo "To install PG extensions: $(cat /opt/utils/install_list_pgext.apt)" \
+ && echo "To install PG extensions: $(cat /opt/utils/install-list-pgext.apt)" \
  && install_apt /opt/utils/install-list-pgext.apt \
  ## Install extensions: install ext that need to be installed manually
  && source /opt/utils/script-setup-pg-ext.sh \
