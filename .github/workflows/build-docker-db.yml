@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=16
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=17
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export PG_MAJOR=18
-          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-trixie"
+          build_image_no_tag postgres-${PG_MAJOR} latest docker_atom/atom.Dockerfile --build-arg "BASE_IMG=postgres:${PG_MAJOR}-bookworm"
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
           build_image postgres-${PG_MAJOR}     latest docker_base/base.Dockerfile --build-arg "BASE_IMG=postgres-${PG_MAJOR}" --build-arg "PYTHON_VERSION=3.13"
           push_image  postgres-
