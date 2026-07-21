@@ -9,8 +9,8 @@ LABEL maintainer="haobibo@gmail.com"
 COPY rootfs /
 
 RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext-mirror.sh \
- # PG extension managers: pgxman, pgxnclient
- && apt-get update && apt-get install -y postgresql-server-dev-${PG_MAJOR} pgxman \
+ # PG extension managers: pgxnclient
+ && apt-get update && apt-get install -y postgresql-server-dev-${PG_MAJOR} \
  && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \
  ## Generate a package list based on PG_MAJOR version
  && apt-get update && apt-get install -y gettext \
@@ -27,7 +27,6 @@ RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext
  && setup_apache_age \
  && setup_pg_duckdb \
  && setup_pg_net \
- ## && pgxman install -y --overwrite pgsodium \
  ## required to build some extensions and can be removed after install:
  && apt-get remove -y postgresql-server-dev-${PG_MAJOR} ninja-build \
  && ls -alh /usr/share/postgresql/*/extension/*.control | sort \
