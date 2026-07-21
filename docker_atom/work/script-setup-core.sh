@@ -153,8 +153,7 @@ setup_node_base() {
      local VER_NODEJS_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && local ATOM_NODEJS=$(curl -sL https://github.com/nodejs/node/releases.atom | grep 'releases/tag' | sort -r) \
-  && local VERS_NODEJS=$(echo "${ATOM_NODEJS}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_NODEJS=$(curl -sL "https://api.github.com/repos/nodejs/node/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_NODEJS_REQ}" ]; then
           local VER_NODEJS_RE=${VER_NODEJS_REQ#v} && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
        && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)")
@@ -179,7 +178,7 @@ setup_node_pnpm() {
   local VER_PNPM_REQ="${1:-}" UNAME ARCH URL_PNPM TMPDIR ;
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
-  && local VERS_PNPM=$(curl -fsSL https://github.com/pnpm/pnpm/releases.atom | grep -Po '(?<=tag/v)\d[\d.]+' | grep -v alpha | sort -rV) \
+  && local VERS_PNPM=$(curl -fsSL "https://api.github.com/repos/pnpm/pnpm/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v alpha | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_PNPM_REQ}" ]; then
        local VER_PNPM_RE=${VER_PNPM_REQ#v} \
        && VER_PNPM_RE=${VER_PNPM_RE//./\\.} \
@@ -209,8 +208,7 @@ setup_node_bun() {
      local VER_BUN_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' ) \
-  && local ATOM_BUN=$(curl -sL https://github.com/oven-sh/bun/releases.atom | grep 'releases/tag' | sort -r) \
-  && local VERS_BUN=$(echo "${ATOM_BUN}" | grep -Po 'bun-v\K\d+\.\d+\.\d+' | sort -rV) \
+  && local VERS_BUN=$(curl -sL "https://api.github.com/repos/oven-sh/bun/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po 'bun-v\K\d+\.\d+\.\d+' | sort -rV) \
   && if [ -n "${VER_BUN_REQ}" ]; then
        local VER_BUN_RE=${VER_BUN_REQ#v} \
        && VER_BUN_RE=${VER_BUN_RE//./\\.} \
@@ -234,8 +232,8 @@ setup_GO() {
      local VER_GO_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(dpkg --print-architecture) \
-  && local ATOM_GO=$(curl -sL https://github.com/golang/go/releases.atom | grep 'releases/tag' | grep -v 'rc' | sort -r) \
-  && local VERS_GO=$(echo "${ATOM_GO}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_GO=$(curl -sL "https://api.github.com/repos/golang/go/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
+  && { [ -n "${VERS_GO}" ] || VERS_GO=$(curl -sL "https://go.dev/dl/?mode=json" | grep -Po '(?<="version": "go)\d[\d.]+' | sort -rV) ; } \
   && if [ -n "${VER_GO_REQ}" ]; then
        local VER_GO_RE=${VER_GO_REQ#v} \
        && VER_GO_RE=${VER_GO_RE//./\\.} \
@@ -289,8 +287,7 @@ setup_julia() {
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH_1=$(uname -m) \
   && local ARCH_2=$(uname -m | sed -e 's/x86_64/x64/') \
-  && local ATOM_JULIA=$(curl -sL https://github.com/JuliaLang/julia/releases.atom | grep -P 'releases/tag(?!.*(rc|alpha|beta))' | sort -r) \
-  && local VERS_JULIA=$(echo "${ATOM_JULIA}" | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_JULIA=$(curl -sL "https://api.github.com/repos/JuliaLang/julia/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -P -v '(rc|alpha|beta)' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_JULIA_REQ}" ]; then
        local VER_JULIA_RE=${VER_JULIA_REQ#v} \
        && VER_JULIA_RE=${VER_JULIA_RE//./\\.} \
@@ -361,7 +358,7 @@ setup_bazel() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
   && local VER_BAZEL_REQ="${1:-}" \
-  && local VERS_BAZEL=$(curl -sL https://github.com/bazelbuild/bazel/releases.atom | grep 'releases/tag' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_BAZEL=$(curl -sL "https://api.github.com/repos/bazelbuild/bazel/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_BAZEL_REQ}" ]; then
        local VER_BAZEL_RE=${VER_BAZEL_REQ#v} \
        && VER_BAZEL_RE=${VER_BAZEL_RE//./\\.} \
@@ -379,7 +376,7 @@ setup_bazel() {
 
 setup_gradle() {
      local VER_GRADLE_REQ="${1:-}" \
-  && local VERS_GRADLE=$(curl -sL https://github.com/gradle/gradle/releases.atom | grep 'releases/tag' | grep -v 'M' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_GRADLE=$(curl -sL "https://api.github.com/repos/gradle/gradle/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'M' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_GRADLE_REQ}" ]; then
        local VER_GRADLE_RE=${VER_GRADLE_REQ#v} \
        && VER_GRADLE_RE=${VER_GRADLE_RE//./\\.} \
@@ -399,7 +396,7 @@ setup_yq() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
   [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
      local VER_YQ="" VER_YQ_REQ="${1:-}" \
-  && local VERS_YQ=$(curl -sL https://github.com/mikefarah/yq/releases.atom | grep 'releases/tag' | grep -Po 'v\K[\d.]+' | sort -rV) \
+  && local VERS_YQ=$(curl -sL "https://api.github.com/repos/mikefarah/yq/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po 'v\K[\d.]+' | sort -rV) \
   && if [ -n "${VER_YQ_REQ}" ]; then
        local VER_YQ_RE=${VER_YQ_REQ#v} && VER_YQ_RE=${VER_YQ_RE//./\\.} \
        && VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)")

@@ -1,6 +1,6 @@
 setup_traefik() {
      local VER_TRAEFIK_REQ="${1:-}" \
-  && local VERS_TRAEFIK=$(curl -sL https://github.com/traefik/traefik/releases.atom | grep 'releases/tag' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TRAEFIK_REQ}" ]; then
        local VER_TRAEFIK_RE=${VER_TRAEFIK_REQ#v} \
        && VER_TRAEFIK_RE=${VER_TRAEFIK_RE//./\\.} \
@@ -20,7 +20,7 @@ setup_caddy() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_CADDY_REQ="${1:-}" \
-  && local VERS_CADDY=$(curl -sL https://github.com/caddyserver/caddy/releases.atom | grep "releases/tag" | grep -v 'beta' | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'beta' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_CADDY_REQ}" ]; then
        local VER_CADDY_RE=${VER_CADDY_REQ#v} \
        && VER_CADDY_RE=${VER_CADDY_RE//./\\.} \
@@ -41,7 +41,7 @@ setup_oauth2_proxy() {
   [[ "$ARCH" =~ ^(amd64|arm64|armv7)$ ]] || { echo "Unsupported architecture for oauth2-proxy: $(uname -m)"; return 1; }
 
      local VER_OAUTH2_PROXY_REQ="${1:-}" \
-  && local VERS_OAUTH2_PROXY=$(curl -sL https://github.com/oauth2-proxy/oauth2-proxy/releases.atom | grep 'releases/tag' | grep -Po '(?<=tag/v)\d[\d.]+' | sort -rV) \
+  && local VERS_OAUTH2_PROXY=$(curl -sL "https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(?<=v)?\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_OAUTH2_PROXY_REQ}" ]; then
        local VER_OAUTH2_PROXY_RE=${VER_OAUTH2_PROXY_REQ#v} \
        && VER_OAUTH2_PROXY_RE=${VER_OAUTH2_PROXY_RE//./\\.} \

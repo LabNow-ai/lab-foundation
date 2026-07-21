@@ -18,7 +18,7 @@ setup_pg_search() {
  ## ref1: https://docs.paradedb.com/deploy/self-hosted/extension
  ## ref2: https://github.com/paradedb/paradedb
     ARCH="amd64" \
- && VER_PG_SEARCH=$(curl -sL https://github.com/paradedb/paradedb/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
+ && VER_PG_SEARCH=$(curl -sL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
  && URL_PG_SEARCH="https://github.com/paradedb/paradedb/releases/download/v${VER_PG_SEARCH}/postgresql-${PG_MAJOR}-pg-search_${VER_PG_SEARCH}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
@@ -38,7 +38,7 @@ setup_apache_age() {
 setup_pgvectorscale() {
  ## ref: https://github.com/timescale/pgvectorscale
     ARCH="amd64" \
- && VER_PGVS=$(curl -sL https://github.com/timescale/pgvectorscale/releases.atom | grep 'releases/tag' | head -1 | grep -Po '\d[\d.]+' ) \
+ && VER_PGVS=$(curl -sL "https://api.github.com/repos/timescale/pgvectorscale/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
  && URL_PGVS="https://github.com/timescale/pgvectorscale/releases/download/${VER_PGVS}/pgvectorscale-${VER_PGVS}-pg${PG_MAJOR}-${ARCH}.zip" \
  && mkdir -pv /tmp/pgvectorscale/ && cd /tmp/pgvectorscale \
  && install_zip ${URL_PGVS} && mv /opt/pgvectorscal* /tmp/pgvectorscale/ \
