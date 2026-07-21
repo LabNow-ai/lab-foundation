@@ -4,7 +4,7 @@ postgresql-${PG_MAJOR}-cron                  % job scheduler using background wo
 postgresql-${PG_MAJOR}-pgaudit               % SQL audit logging via executor hooks
 postgresql-${PG_MAJOR}-pg-stat-kcache        % OS-level CPU/IO stats for queries
 postgresql-${PG_MAJOR}-squeeze               % automatic table bloat reduction (bgworker)
-postgresql-${PG_MAJOR}-citus-13.0            % distributed PostgreSQL extension (planner hook)
+postgresql-${PG_MAJOR}-citus-14.1            % distributed PostgreSQL extension (planner hook)
 timescaledb-2-postgresql-${PG_MAJOR}         % time-series database extension (planner + bgworker)
 
 
