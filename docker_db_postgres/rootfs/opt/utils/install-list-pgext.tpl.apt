@@ -26,7 +26,7 @@ postgresql-${PG_MAJOR}-prioritize            % query prioritization framework
 
 %% Vector, scientific, spatial, and domain-specific extensions (AI, GIS, chemistry, scientific computing)
 postgresql-${PG_MAJOR}-pgvector              % vector data type and similarity search
-postgresql-16-rdkit                          % cheminformatics cartridge (chemistry) % TODO: >16 not released yet
+postgresql-${PG_MAJOR}-rdkit                 % cheminformatics cartridge (chemistry)
 postgresql-${PG_MAJOR}-postgis               % spatial types, indexes, and GIS functions
 postgis osm2pgrouting                        % OpenStreetMap routing tools for PostGIS
 postgresql-${PG_MAJOR}-pgrouting             % routing algorithms on PostGIS networks
@@ -77,7 +77,7 @@ postgresql-${PG_MAJOR}-pgmp                  % management and monitoring utiliti
 %% Query planning, optimization, and execution control (query behavior analysis and tuning)
 postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
 postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
-% postgresql-${PG_MAJOR}-pgfincore           % inspect shared buffer / OS cache residency % TODO: >17 not released yet
+% postgresql-${PG_MAJOR}-pgfincore           % inspect shared buffer / OS cache residency
 
 
 %% Indexing, access methods, and physical data layout (storage, partitioning, and index structures)
