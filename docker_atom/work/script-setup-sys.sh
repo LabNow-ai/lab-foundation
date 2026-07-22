@@ -4,7 +4,7 @@ source /opt/utils/script-utils.sh
 setup_tini() {
      ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_TINI_REQ="${1:-}" \
-  && local VERS_TINI=$(curl -sL https://github.com/krallin/tini/releases.atom | grep 'releases/tag' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_TINI=$(curl -sL "https://api.github.com/repos/krallin/tini/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TINI_REQ}" ]; then
        local VER_TINI_RE=${VER_TINI_REQ#v} \
        && VER_TINI_RE=${VER_TINI_RE//./\\.} \
@@ -27,7 +27,7 @@ setup_supervisord() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_SUPERVISORD_REQ="${1:-}" \
-  && local VERS_SUPERVISORD=$(curl -sL https://github.com/LabNow-ai/supervisord/releases.atom | grep "releases/tag" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && local VERS_SUPERVISORD=$(curl -sL "https://api.github.com/repos/LabNow-ai/supervisord/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_SUPERVISORD_REQ}" ]; then
        local VER_SUPERVISORD_RE=${VER_SUPERVISORD_REQ#v} \
        && VER_SUPERVISORD_RE=${VER_SUPERVISORD_RE//./\\.} \

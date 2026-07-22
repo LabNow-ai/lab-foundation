@@ -4,7 +4,7 @@ postgresql-${PG_MAJOR}-cron                  % job scheduler using background wo
 postgresql-${PG_MAJOR}-pgaudit               % SQL audit logging via executor hooks
 postgresql-${PG_MAJOR}-pg-stat-kcache        % OS-level CPU/IO stats for queries
 postgresql-${PG_MAJOR}-squeeze               % automatic table bloat reduction (bgworker)
-postgresql-${PG_MAJOR}-citus-13.0            % distributed PostgreSQL extension (planner hook)
+postgresql-${PG_MAJOR}-citus-14.1            % distributed PostgreSQL extension (planner hook)
 timescaledb-2-postgresql-${PG_MAJOR}         % time-series database extension (planner + bgworker)
 
 
@@ -26,7 +26,7 @@ postgresql-${PG_MAJOR}-prioritize            % query prioritization framework
 
 %% Vector, scientific, spatial, and domain-specific extensions (AI, GIS, chemistry, scientific computing)
 postgresql-${PG_MAJOR}-pgvector              % vector data type and similarity search
-postgresql-16-rdkit                          % cheminformatics cartridge (chemistry) % TODO: >16 not released yet
+postgresql-16-rdkit                          % cheminformatics cartridge (chemistry)
 postgresql-${PG_MAJOR}-postgis               % spatial types, indexes, and GIS functions
 postgis osm2pgrouting                        % OpenStreetMap routing tools for PostGIS
 postgresql-${PG_MAJOR}-pgrouting             % routing algorithms on PostGIS networks
@@ -46,7 +46,7 @@ postgresql-${PG_MAJOR}-rational              % rational number data type
 postgresql-${PG_MAJOR}-mysql-fdw             % foreign data wrapper for MySQL
 postgresql-${PG_MAJOR}-oracle-fdw            % foreign data wrapper for Oracle
 postgresql-${PG_MAJOR}-tds-fdw               % foreign data wrapper for MSSQL / Sybase
-postgresql-${PG_MAJOR}-ogr-fdw               % FDW for spatial data via GDAL
+% postgresql-${PG_MAJOR}-ogr-fdw             % FDW for spatial data via GDAL % TODO - fix deps
 
 
 %% Procedural languages and language tooling (user-defined functions and language runtimes)
@@ -77,7 +77,7 @@ postgresql-${PG_MAJOR}-pgmp                  % management and monitoring utiliti
 %% Query planning, optimization, and execution control (query behavior analysis and tuning)
 postgresql-${PG_MAJOR}-show-plans            % display cached execution plans
 postgresql-${PG_MAJOR}-hypopg                % hypothetical indexes for query planning
-% postgresql-${PG_MAJOR}-pgfincore           % inspect shared buffer / OS cache residency % TODO: >17 not released yet
+% postgresql-${PG_MAJOR}-pgfincore           % inspect shared buffer / OS cache residency
 
 
 %% Indexing, access methods, and physical data layout (storage, partitioning, and index structures)

@@ -1,8 +1,13 @@
 #!/bin/bash
 set -eux
 
+# If not executed in GitHub Action, run script in project root, and export the following 3 variables manually:
+# export REGISTRY_SRC='quay.io'            # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
+# export REGISTRY_DST='quay.io'            # For tags of built images: where to push images to, docker.io or other destination registry URL.
+# export CI_PROJECT_NAME='LabNow/lab-foundation'
+
 CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
-CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-"main"}
+CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-$(git branch --show-current)}
 CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 
 # If on the main branch, image namespace will be same as CI_PROJECT_NAME's name space;
@@ -11,7 +16,7 @@ CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})${NAMESPACE_SUFFIX}" ;
 
 export IMG_NAMESPACE=$(echo "${CI_PROJECT_NAMESPACE}" | awk '{print tolower($0)}')
-export IMG_PREFIX_SRC=$(echo "${REGISTRY_SRC:-"docker.io"}/${IMG_NAMESPACE}" | awk '{print tolower($0)}')
+export IMG_PREFIX_SRC=$(echo "${REGISTRY_SRC:-"quay.io"}/${IMG_NAMESPACE}"   | awk '{print tolower($0)}')
 export IMG_PREFIX_DST=$(echo "${REGISTRY_DST:-"docker.io"}/${IMG_NAMESPACE}" | awk '{print tolower($0)}')
 export TAG_SUFFIX="-$(git rev-parse --short HEAD)"
 
@@ -91,4 +96,4 @@ setup_github_actions() {
     jq '.experimental=true | ."data-root"="/mnt/docker"' /etc/docker/daemon.json > /tmp/daemon.json && sudo mv /tmp/daemon.json /etc/docker/ ;
     ( sudo service docker restart || true ) && cat /etc/docker/daemon.json && docker info ;
 }
-[ "$GITHUB_ACTIONS" = "true" ] && echo "Running in GitHub Actions and Setup Env: $(setup_github_actions)"
+[ ${GITHUB_ACTIONS:-"false"} = "true" ] && echo "Running in GitHub Actions and Setup Env: $(setup_github_actions)" || echo "Not running in GitHub Action." ;
