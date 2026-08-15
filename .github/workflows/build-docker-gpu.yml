@@ -4,11 +4,9 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   pull_request:
     branches: [ "main" ]
     paths-ignore: [ "*.md" ]
-
   workflow_dispatch:  # Allows you to run this workflow manually from the Actions tab
 
 concurrency:
@@ -16,6 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  TZ: Asia/Shanghai
   BUILDKIT_PROGRESS: "plain"  # Full logs for CI build.
   REGISTRY_SRC: ${{ vars.REGISTRY_SRC || 'quay.io' }} # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
   REGISTRY_DST: ${{ vars.REGISTRY_DST || 'quay.io' }} # For tags of built images: where to push images to, docker.io or other destination registry URL.
@@ -26,6 +25,9 @@ env:
   DOCKER_MIRROR_REGISTRY_USERNAME: ${{ vars.DOCKER_MIRROR_REGISTRY_USERNAME }}
   DOCKER_MIRROR_REGISTRY_PASSWORD: ${{ secrets.DOCKER_MIRROR_REGISTRY_PASSWORD }}
   CI_PROJECT_NAME: ${{ vars.CI_PROJECT_NAME || 'LabNow/lab-foundation' }}
+
+permissions:
+  contents: read
 
 jobs:
   # cuda docker image tags: https://hub.docker.com/r/nvidia/cuda/tags
@@ -42,13 +44,14 @@ jobs:
           include: [{arch: amd64, runner: ubuntu-latest}] # , {arch: arm64, runner: ubuntu-24.04-arm}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image_no_tag nvidia-cuda 12.8.1-cudnn-devel-ubuntu24.04 docker_atom/Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
+          build_image_no_tag nvidia-cuda 12.8.1-cudnn-devel-ubuntu24.04 docker_atom/atom.Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          PUSH=false TAG_VER=false    build_image tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.8.1-cudnn-devel-ubuntu24.04"
-          build_image cuda_12.8 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
+          build_image_no_tag tmp latest docker_base/base.Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.8.1-cudnn-devel-ubuntu24.04"
+          build_image cuda_12.8 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp"
+          push_image cuda
 
   job-cuda_126:
     name: 'cuda_12.6'
@@ -57,47 +60,51 @@ jobs:
           include: [{arch: amd64, runner: ubuntu-latest}] # , {arch: arm64, runner: ubuntu-24.04-arm}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image_no_tag nvidia-cuda 12.6.3-cudnn-devel-ubuntu24.04 docker_atom/Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.6.3-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
+          build_image_no_tag nvidia-cuda 12.6.3-cudnn-devel-ubuntu24.04 docker_atom/atom.Dockerfile --build-arg "BASE_IMG=nvidia/cuda:12.6.3-cudnn-devel-ubuntu24.04" && clear_images nvidia/cuda
           export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          PUSH=false TAG_VER=false    build_image tmp latest docker_base/Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.6.3-cudnn-devel-ubuntu24.04"
-          build_image cuda_12.6 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
-          build_image cuda      latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp" --build-context ${IMG_PREFIX_SRC}/tmp:latest=docker-image://${IMG_PREFIX_SRC}/tmp:latest
+          build_image_no_tag tmp latest docker_base/base.Dockerfile --build-arg "BASE_IMG=nvidia-cuda:12.6.3-cudnn-devel-ubuntu24.04"
+          build_image cuda_12.6 latest docker_cuda/nvidia-cuda.Dockerfile --build-arg "BASE_IMG=tmp"
+          alias_image cuda_12.6 latest cuda latest
+          push_image cuda
 
   job-tf2:
     name: 'tf2,tf2-cuda126'
     needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image tf2-cuda126 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
-          build_image tf2         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
+          build_image tf2-cuda126 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.6"  --build-arg "ARG_PROFILE_PYTHON=tf2"
+          alias_image tf2-cuda126 latest tf2 latest
+          push_image
 
   job-torch_cuda128:
     name: 'torch,torch-cuda128'
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image torch-cuda128 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
-          build_image torch         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
+          build_image torch-cuda128 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=torch"
+          alias_image torch-cuda128 latest torch latest
+          push_image
 
   job-paddle_cuda126:
     name: 'paddle-cuda126,paddle-3.0'
     needs: job-cuda_126
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image paddle-cuda126 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
-          build_image paddle-3.0     latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
+          build_image paddle-cuda126 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.6" --build-arg "ARG_PROFILE_PYTHON=paddle,mkl"
+          alias_image paddle-cuda126 latest paddle-3.0 latest
+          push_image
 
 
   job-py-nlp:
@@ -105,21 +112,23 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image py-nlp-cuda128 latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
-          build_image py-nlp         latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
+          build_image py-nlp-cuda128 latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,nlp"
+          alias_image py-nlp-cuda128 latest py-nlp latest
+          push_image
 
   job-py-cv:
     name: 'py-cv'
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image py-cv   latest docker_core/Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,cv"
+          build_image py-cv   latest docker_core/core.Dockerfile --build-arg "BASE_IMG=cuda_12.8" --build-arg "ARG_PROFILE_PYTHON=datascience,mkl,torch,cv"
+          push_image
 
 
   job-core-cuda:
@@ -127,17 +136,10 @@ jobs:
     needs: job-cuda_128
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && free_diskspace && export IMG_PREFIX_SRC="${IMG_PREFIX_DST}"
-          build_image full-cuda-12.8  latest docker_core/Dockerfile \
-            --build-arg "BASE_IMG=cuda_12.8" \
-            --build-arg "ARG_PROFILE_PYTHON=base,datascience,mkl,database,nlp,cv,chem,tf2,torch" \
-            --build-arg "ARG_PROFILE_R=base,datascience" \
-            --build-arg "ARG_PROFILE_NODEJS=base" \
-            --build-arg "ARG_PROFILE_JAVA=base,maven" \
-            --build-arg "ARG_PROFILE_LATEX=base,cjk"
-          build_image core-cuda       latest docker_core/Dockerfile \
+          build_image full-cuda-12.8 latest docker_core/core.Dockerfile \
             --build-arg "BASE_IMG=cuda_12.8" \
             --build-arg "ARG_PROFILE_PYTHON=base,datascience,mkl,database,nlp,cv,chem,tf2,torch" \
             --build-arg "ARG_PROFILE_R=base,datascience" \
@@ -149,18 +151,18 @@ jobs:
     name: 'nvidia-ctk'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="docker.io/library"
           build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile
 
 
   ## Sync all images in this build (listed by "names") to mirror registry.
-  sync_images:
+  job-sync-images:
     needs: ["job-core-cuda", "job-py-cv", "job-py-nlp", "job-torch_cuda128", "job-nvidia-ctk"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - env:
           AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
           DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
