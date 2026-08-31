@@ -9,7 +9,7 @@ LABEL maintainer="haobibo@gmail.com"
 COPY rootfs /
 
 RUN set -eux && . /opt/utils/script-utils.sh && . /opt/utils/script-setup-pg-ext-mirror.sh \
- # PG extension managers: pgxnclient
+ ## PG extension managers: pgxnclient
  && apt-get update && apt-get install -y postgresql-server-dev-${PG_MAJOR} \
  && pip install --no-cache-dir --root-user-action=ignore -U pgxnclient && pgxn --version \
  ## Generate a package list based on PG_MAJOR version
