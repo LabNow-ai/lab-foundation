@@ -23,6 +23,7 @@ setup_pg_search() {
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
  && curl -fsSL -O "${URL_PG_SEARCH}" \
+ && apt-get -qq install -yq --no-install-recommends libopenblas0 \
  && dpkg -i *.deb
 }
 
