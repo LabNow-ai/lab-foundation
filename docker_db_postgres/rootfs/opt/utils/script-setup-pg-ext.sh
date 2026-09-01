@@ -22,7 +22,8 @@ setup_pg_search() {
  && URL_PG_SEARCH="https://github.com/paradedb/paradedb/releases/download/v${VER_PG_SEARCH}/postgresql-${PG_MAJOR}-pg-search_${VER_PG_SEARCH}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
- && wget ${URL_PG_SEARCH} \
+ && curl -fsSL -O "${URL_PG_SEARCH}" \
+ && apt-get -qq install -yq --no-install-recommends libopenblas0 \
  && dpkg -i *.deb
 }
 
@@ -49,10 +50,10 @@ setup_pgroonga(){
     ## ref1: https://pgroonga.github.io/tutorial/
     ## ref2: https://github.com/pgroonga/docker
     mkdir -pv /tmp/pgroonga && cd /tmp/pgroonga
-    wget https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
+    curl -fsSL -O https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
  && apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
  && rm apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
- && wget https://packages.groonga.org/debian/groonga-apt-source-latest-$(lsb_release -cs).deb \
+ && curl -fsSL -O https://packages.groonga.org/debian/groonga-apt-source-latest-$(lsb_release -cs).deb \
  && apt install -y -V ./groonga-apt-source-latest-$(lsb_release -cs).deb \
  && rm groonga-apt-source-latest-$(lsb_release -cs).deb \
  && apt update && apt install -y -V \
