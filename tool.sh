@@ -1,10 +1,9 @@
 #!/bin/bash
-set -eux
-
-# If not executed in GitHub Action, run script in project root, and export the following 3 variables manually:
-# export REGISTRY_SRC='quay.io'            # For BASE_NAMESPACE of images: where to pull base images from, docker.io or other source registry URL.
-# export REGISTRY_DST='quay.io'            # For tags of built images: where to push images to, docker.io or other destination registry URL.
-# export CI_PROJECT_NAME='LabNow/lab-foundation'
+if [ "${GITHUB_ACTIONS:-}" != "true" ]; then
+    export BUILDKIT_PROGRESS=plain REGISTRY_SRC=quay.io REGISTRY_DST=quay.io CI_PROJECT_NAME=LabNow-ai/lab-foundation
+else
+    set -exu
+fi
 
 CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
 CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-$(git branch --show-current)}

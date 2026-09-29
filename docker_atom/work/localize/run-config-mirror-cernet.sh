@@ -1,7 +1,7 @@
 #! /bin/sh
 set -ex
 
-echo "Setup mirror config for CSTNET (CERNET MirrorZ)..."
+echo "Setup mirror config for CERNET..."
 
 export TZ=${TZ:="Asia/Shanghai"}
 ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ >/etc/timezone
