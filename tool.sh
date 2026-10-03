@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
     set -exu
-    export CI_PROJECT_BRANCH=${GITHUB_HEAD_REF}           CI_PROJECT_NAME=${GITHUB_REPOSITORY}
+    export CI_PROJECT_BRANCH=${GITHUB_HEAD_REF}           CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
 else
     export CI_PROJECT_BRANCH=$(git branch --show-current) CI_PROJECT_NAME=LabNow/lab-foundation
     export REGISTRY_SRC=quay.io REGISTRY_DST=quay.io
