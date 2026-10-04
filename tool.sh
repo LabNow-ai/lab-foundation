@@ -1,11 +1,17 @@
 #!/bin/bash
-if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
-    set -exu
-    export CI_PROJECT_BRANCH=${GITHUB_HEAD_REF}           CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
+if [ "${GITHUB_ACTIONS:-"false"}" != "true" ]; then
+  export CI_PROJECT_BRANCH=$(git branch --show-current)         CI_PROJECT_NAME=LabNow/lab-foundation
+  export REGISTRY_SRC=quay.io REGISTRY_DST=quay.io
+  echo "Not running in GitHub Action."
 else
-    export CI_PROJECT_BRANCH=$(git branch --show-current) CI_PROJECT_NAME=LabNow/lab-foundation
-    export REGISTRY_SRC=quay.io REGISTRY_DST=quay.io
+  set -exu
+  export CI_PROJECT_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} CI_PROJECT_NAME=${CI_PROJECT_NAME:-$GITHUB_REPOSITORY}
+  echo "Running in GitHub Actions and Setup Env:"
+  [ ! -f /etc/docker/daemon.json ] && sudo tee /etc/docker/daemon.json > /dev/null <<< '{}' ;
+  jq '.experimental=true | ."data-root"="/mnt/docker"' /etc/docker/daemon.json > /tmp/daemon.json && sudo mv /tmp/daemon.json /etc/docker/ ;
+  ( sudo service docker restart || true ) && cat /etc/docker/daemon.json && docker info ;
 fi
+
 
 CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 
@@ -93,10 +99,3 @@ free_diskspace() {
     remove_folder /usr/share/dotnet ; # /usr/local/lib/android /var/lib/docker
     df -h ;
 }
-
-setup_github_actions() {
-    [ ! -f /etc/docker/daemon.json ] && sudo tee /etc/docker/daemon.json > /dev/null <<< '{}' ;
-    jq '.experimental=true | ."data-root"="/mnt/docker"' /etc/docker/daemon.json > /tmp/daemon.json && sudo mv /tmp/daemon.json /etc/docker/ ;
-    ( sudo service docker restart || true ) && cat /etc/docker/daemon.json && docker info ;
-}
-[ ${GITHUB_ACTIONS:-"false"} = "true" ] && echo "Running in GitHub Actions and Setup Env: $(setup_github_actions)" || echo "Not running in GitHub Action." ;
