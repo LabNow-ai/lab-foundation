@@ -3,10 +3,20 @@ source /opt/utils/script-utils.sh
 
 setup_mamba() {
   # Notice: mamba use $CONDA_PREFIX to locate base env
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') && VER_MICROMAMBA="latest" \
-  && ARCH=$(uname -m | sed -e 's/x86_64/64/') \
-  && URL_MICROMAMBA="https://micromamba.snakepit.net/api/micromamba/${UNAME}-${ARCH}/${VER_MICROMAMBA}" \
-  && echo "Downloading micromamba from ${URL_MICROMAMBA}" \
+     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/64/') \
+  && local VER_MICROMAMBA_REQ="${1:-}" \
+  && local VERS_MICROMAMBA=$(curl -fsSL "https://api.github.com/repos/mamba-org/micromamba-releases/releases?per_page=50" | grep -oP '"tag_name":\s*"\K[^"]+' | sort -rV) \
+  && if [ -n "${VER_MICROMAMBA_REQ}" ]; then
+       local VER_MICROMAMBA_RE=${VER_MICROMAMBA_REQ#v} \
+       && VER_MICROMAMBA_RE=${VER_MICROMAMBA_RE//./\\.} \
+       && local VER_MICROMAMBA=$(echo "${VERS_MICROMAMBA}" | grep -m1 -E "^${VER_MICROMAMBA_RE}([.-]|$)")
+     else
+       local VER_MICROMAMBA=$(echo "${VERS_MICROMAMBA}" | head -1)
+     fi \
+  && [ -n "${VER_MICROMAMBA}" ] \
+  && local URL_MICROMAMBA="https://github.com/mamba-org/micromamba-releases/releases/download/${VER_MICROMAMBA}/micromamba-${UNAME}-${ARCH}.tar.bz2" \
+  && echo "Downloading micromamba ${VER_MICROMAMBA} from ${URL_MICROMAMBA}" \
   && mkdir -pv /opt/mamba /etc/conda \
   && install_tar_bz $URL_MICROMAMBA bin/micromamba && mv /opt/bin/micromamba /opt/mamba/mamba \
   && ln -sf /opt/mamba/mamba /usr/bin/ \

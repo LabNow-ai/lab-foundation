@@ -11,14 +11,14 @@ eval "export $(cat /etc/os-release  | grep ID=)" && export OS_ID=${ID} && echo "
 
 FILE_DEB=$([ -f /etc/apt/sources.list.d/${OS_ID}.sources  ] && echo /etc/apt/sources.list.d/${OS_ID}.sources || echo /etc/apt/sources.list )
 if [ -f $FILE_DEB ]; then
-  sed -i 's/mirrors.*.com\/ubuntu/mirrors.cloud.aliyuncs.com\/ubuntu/'        $FILE_DEB
-  sed -i 's/archive.ubuntu.com\/ubuntu/mirrors.cloud.aliyuncs.com\/ubuntu/'   $FILE_DEB
-  sed -i 's/security.ubuntu.com\/ubuntu/mirrors.cloud.aliyuncs.com\/ubuntu/'  $FILE_DEB
-  sed -i 's/deb.debian.org\/debian/mirrors.cloud.aliyuncs.com\/debian/'       $FILE_DEB
+  sed -i 's|mirrors.*.com/ubuntu|mirrors.cloud.aliyuncs.com/ubuntu|'        $FILE_DEB
+  sed -i 's|archive.ubuntu.com/ubuntu|mirrors.cloud.aliyuncs.com/ubuntu|'   $FILE_DEB
+  sed -i 's|security.ubuntu.com/ubuntu|mirrors.cloud.aliyuncs.com/ubuntu|'  $FILE_DEB
+  sed -i 's|deb.debian.org/debian|mirrors.cloud.aliyuncs.com/debian|'       $FILE_DEB
   echo "Finished setting ubuntu/debian mirror"
 fi
 
-[ -f /etc/apt/sources.list.d/pgdg.list ] && sed -i 's/apt.postgresql.org\/pub/mirrors.cloud.aliyuncs.com\/postgresql/' /etc/apt/sources.list.d/pgdg.list
+[ -f /etc/apt/sources.list.d/pgdg.list ] && sed -i 's|apt.postgresql.org/pub|mirrors.cloud.aliyuncs.com/postgresql|' /etc/apt/sources.list.d/pgdg.list
 
 if [ -f "$(which python)" ] ; then
   echo "Found python, setting pypi source in /etc/pip.conf"
