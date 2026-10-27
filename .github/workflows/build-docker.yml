@@ -141,18 +141,18 @@ jobs:
 
 
   job-jdk:
-    name: 'jdk-8,jdk-11,jdk-17,jdk-21,jdk'
+    name: 'jdk-8,jdk-17,jdk-25,jdk-27,jdk'
     needs: job-base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh
-          build_image jdk-21 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=21"
+          build_image jdk-27 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=27"
+          build_image jdk-25 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=25"
           build_image jdk-17 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=17"
-          build_image jdk-11 latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=11"
           build_image jdk-8  latest docker_core/core.Dockerfile --build-arg "ARG_PROFILE_JAVA=base"  --build-arg "VERSION_JDK=8"
-          alias_image jdk-11 latest jdk latest && push_image jdk
+          alias_image jdk-17 latest jdk latest && push_image jdk
 
   job-julia:
     name: 'julia'

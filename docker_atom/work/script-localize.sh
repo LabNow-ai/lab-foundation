@@ -1,20 +1,25 @@
-#!/bin/bash
+#!/bin/sh
 
-# Set PROFILE_LOCALIZE based on input or environment variable
-if [ $# -ge 1 ]; then
+if [ "$#" -ge 1 ]; then
     PROFILE_LOCALIZE="$1"
 else
-    PROFILE_LOCALIZE="${PROFILE_LOCALIZE:-"default"}"
+    PROFILE_LOCALIZE="${PROFILE_LOCALIZE:-default}"
 fi
 
 echo "Using PROFILE_LOCALIZE=${PROFILE_LOCALIZE}"
 
-# Define the file path based on the PROFILE_LOCALIZE variable
-# reference: https://github.com/RubyMetric/chsrc/blob/main/src/chsrc.c
-DIR_BASE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-FILE="${DIR_BASE}/localize/run-config-mirror-${PROFILE_LOCALIZE}.sh"
+SOURCE="$0"
+case "$SOURCE" in /*) ;; *) SOURCE="$(pwd)/$SOURCE" ;; esac
 
-# Check if the file exists
+while [ -L "$SOURCE" ]; do
+    DIR="$(CDPATH= cd -P "$(dirname "$SOURCE")" && pwd)" || exit 1
+    TARGET="$(readlink "$SOURCE")" || exit 1
+    case "$TARGET" in /*) SOURCE="$TARGET" ;; *) SOURCE="$DIR/$TARGET" ;; esac
+done
+
+DIR_BASE="$(CDPATH= cd -P "$(dirname "$SOURCE")" && pwd)" || exit 1
+FILE="$DIR_BASE/localize/run-config-mirror-$PROFILE_LOCALIZE.sh"
+
 if [ -f "$FILE" ]; then
     . "$FILE"
 else
