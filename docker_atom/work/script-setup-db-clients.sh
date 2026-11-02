@@ -12,8 +12,7 @@ setup_postgresql_client() {
 }
 
 setup_duckdb() {
-  local ARCH="$(uname -m)" \
-  && local ARCH_DUCKDB=$([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64") \
+  local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_DUCKDB_REQ="${1:-}" \
   && local VERS_DUCKDB=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//' | sort -rV) \
   && if [ -n "${VER_DUCKDB_REQ}" ]; then
@@ -24,11 +23,14 @@ setup_duckdb() {
        local VER_DUCKDB=$(echo "${VERS_DUCKDB}" | head -1)
      fi \
   && [ -n "${VER_DUCKDB}" ] \
-  && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/duckdb_cli-linux-${ARCH_DUCKDB}.zip" \
-  && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.zip" \
+  && local FILE_DUCKDB="duckdb_cli-linux-${ARCH}.zip" \
+  && local EXT_DUCKDB="zip" \
+  && if [[ "${VER_DUCKDB}" == 2.* ]]; then FILE_DUCKDB="duckdb-cli-linux-${ARCH}.tar.gz"; EXT_DUCKDB="tar.gz"; fi \
+  && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/${FILE_DUCKDB}" \
+  && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.${EXT_DUCKDB}" \
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
   && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
-  && unzip -q "${TMP_FILE}" -d /tmp \
+  && if [[ "${FILE_DUCKDB}" == *.zip ]]; then unzip -q "${TMP_FILE}" -d /tmp; else tar -xzf "${TMP_FILE}" -C /tmp; fi \
   && mkdir -pv /opt/bin \
   && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
   && rm -f "${TMP_FILE}" /tmp/duckdb ;
