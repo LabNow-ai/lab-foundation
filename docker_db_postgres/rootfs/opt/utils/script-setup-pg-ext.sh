@@ -65,7 +65,7 @@ setup_pg_duckdb() {
     cd /tmp
     git clone --depth 1 --recurse-submodules -b main https://github.com/duckdb/pg_duckdb
     cd pg_duckdb
-    # Temporary: remove this pin once pg_duckdb updates its httpfs revision for duckdb-httpfs#517.
+    # TODO: temp remove this pin once pg_duckdb updates its httpfs revision for duckdb-httpfs#517.
     sed -i '/GIT_URL https:\/\/github.com\/duckdb\/duckdb-httpfs/{n;s/GIT_TAG .*/GIT_TAG 3b48554efa84bdf4397f4758f9701646c65d06c1/;}' third_party/pg_duckdb_extensions.cmake
     apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR} liblz4-dev libcurl4-openssl-dev ninja-build
     make -j8 && sudo make install

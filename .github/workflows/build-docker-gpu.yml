@@ -148,7 +148,8 @@ jobs:
       - uses: actions/checkout@v7
       - run: |
           source ./tool.sh && export IMG_PREFIX_SRC="docker.io/library"
-          build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile		&& push_image
+          build_image nvidia-ctk latest		docker_cuda/nvidia-ctk.Dockerfile
+          push_image nvidia-ctk
 
 
   ## Sync all images in this build (listed by "names") to mirror registry.
