@@ -18,7 +18,7 @@ setup_pg_search() {
  ## ref1: https://docs.paradedb.com/deploy/self-hosted/extension
  ## ref2: https://github.com/paradedb/paradedb
     ARCH="amd64" \
- && VER_PG_SEARCH=$(curl -sL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
+ && VER_PG_SEARCH=$(curl -fsSL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": "v)[^"]+' | grep -v -- '-rc' | head -1) \
  && URL_PG_SEARCH="https://github.com/paradedb/paradedb/releases/download/v${VER_PG_SEARCH}/postgresql-${PG_MAJOR}-pg-search_${VER_PG_SEARCH}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
