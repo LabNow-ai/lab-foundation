@@ -65,6 +65,7 @@ setup_pg_duckdb() {
     cd /tmp
     git clone --depth 1 --recurse-submodules -b main https://github.com/duckdb/pg_duckdb
     cd pg_duckdb
+    git submodule update --init --remote --recursive
     apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR} liblz4-dev libcurl4-openssl-dev ninja-build
     make -j8 && sudo make install
 }
