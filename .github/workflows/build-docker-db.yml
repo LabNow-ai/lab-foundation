@@ -30,7 +30,7 @@ env:
 
 jobs:
   job-postgres:
-    name: 'postgres-${{ matrix.pg_major }},postgres-${{ matrix.pg_major }}-ext'
+    name: 'postgres-16,postgres-16-ext,postgres-17,postgres-17-ext,postgres-18,postgres-18-ext'
     runs-on: ubuntu-latest
     strategy:
       matrix:
