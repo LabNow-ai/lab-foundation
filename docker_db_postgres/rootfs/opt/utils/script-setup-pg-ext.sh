@@ -18,7 +18,7 @@ setup_pg_search() {
  ## ref1: https://docs.paradedb.com/deploy/self-hosted/extension
  ## ref2: https://github.com/paradedb/paradedb
     ARCH="amd64" \
- && VER_PG_SEARCH=$(curl -sL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
+ && VER_PG_SEARCH=$(curl -fsSL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": "v)[^"]+' | grep -v -- '-rc' | head -1) \
  && URL_PG_SEARCH="https://github.com/paradedb/paradedb/releases/download/v${VER_PG_SEARCH}/postgresql-${PG_MAJOR}-pg-search_${VER_PG_SEARCH}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
@@ -65,6 +65,8 @@ setup_pg_duckdb() {
     cd /tmp
     git clone --depth 1 --recurse-submodules -b main https://github.com/duckdb/pg_duckdb
     cd pg_duckdb
+    # TODO: temp remove this pin once pg_duckdb updates its httpfs revision for duckdb-httpfs#517.
+    sed -i '/GIT_URL https:\/\/github.com\/duckdb\/duckdb-httpfs/{n;s/GIT_TAG .*/GIT_TAG 3b48554efa84bdf4397f4758f9701646c65d06c1/;}' third_party/pg_duckdb_extensions.cmake
     apt-get -qq install -yq --no-install-recommends postgresql-server-dev-${PG_MAJOR} liblz4-dev libcurl4-openssl-dev ninja-build
     make -j8 && sudo make install
 }

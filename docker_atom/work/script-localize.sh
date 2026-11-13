@@ -1,28 +1,20 @@
 #!/bin/sh
+# Usage: ./script-localize.sh [profile]
+#        source ./script-localize.sh [profile] (Bash; /bin/sh supports direct execution)
 
-if [ "$#" -ge 1 ]; then
-    PROFILE_LOCALIZE="$1"
-else
-    PROFILE_LOCALIZE="${PROFILE_LOCALIZE:-default}"
-fi
+PROFILE_LOCALIZE="${1-${PROFILE_LOCALIZE:-default}}"
+SOURCE="${BASH_SOURCE:-$0}"
+DIR_BASE="$(CDPATH= cd -P "$(dirname "$(readlink -f "$SOURCE")")" && pwd)" || {
+    echo "Cannot locate script directory" >&2
+    return 1 2>/dev/null || exit 1
+}
 
 echo "Using PROFILE_LOCALIZE=${PROFILE_LOCALIZE}"
 
-SOURCE="$0"
-case "$SOURCE" in /*) ;; *) SOURCE="$(pwd)/$SOURCE" ;; esac
-
-while [ -L "$SOURCE" ]; do
-    DIR="$(CDPATH= cd -P "$(dirname "$SOURCE")" && pwd)" || exit 1
-    TARGET="$(readlink "$SOURCE")" || exit 1
-    case "$TARGET" in /*) SOURCE="$TARGET" ;; *) SOURCE="$DIR/$TARGET" ;; esac
-done
-
-DIR_BASE="$(CDPATH= cd -P "$(dirname "$SOURCE")" && pwd)" || exit 1
 FILE="$DIR_BASE/localize/run-config-mirror-$PROFILE_LOCALIZE.sh"
 
-if [ -f "$FILE" ]; then
-    . "$FILE"
-else
+[ -f "$FILE" ] || {
     echo "No such profile for localize: $PROFILE_LOCALIZE" >&2
-    exit 1
-fi
+    return 1 2>/dev/null || exit 1
+}
+. "$FILE"

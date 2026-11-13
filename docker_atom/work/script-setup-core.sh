@@ -163,7 +163,7 @@ setup_node_base() {
      local VER_NODEJS_REQ="${1:-}" \
   && local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
-  && local VERS_NODEJS=$(curl -sL "https://api.github.com/repos/nodejs/node/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_NODEJS=$(curl -sL "https://api.github.com/repos/nodejs/node/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi alpha | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_NODEJS_REQ}" ]; then
           local VER_NODEJS_RE=${VER_NODEJS_REQ#v} && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
        && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)")
