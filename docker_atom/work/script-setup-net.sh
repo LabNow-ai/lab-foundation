@@ -1,6 +1,6 @@
 setup_traefik() {
      local VER_TRAEFIK_REQ="${1:-}" \
-  && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TRAEFIK_REQ}" ]; then
        local VER_TRAEFIK_RE=${VER_TRAEFIK_REQ#v} \
        && VER_TRAEFIK_RE=${VER_TRAEFIK_RE//./\\.} \
@@ -20,7 +20,7 @@ setup_caddy() {
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_CADDY_REQ="${1:-}" \
-  && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'beta' | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(beta|rc)' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_CADDY_REQ}" ]; then
        local VER_CADDY_RE=${VER_CADDY_REQ#v} \
        && VER_CADDY_RE=${VER_CADDY_RE//./\\.} \

@@ -6,7 +6,7 @@ setup_mamba() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/64/') \
   && local VER_MICROMAMBA_REQ="${1:-}" \
-  && local VERS_MICROMAMBA=$(curl -fsSL "https://api.github.com/repos/mamba-org/micromamba-releases/releases?per_page=50" | grep -oP '"tag_name":\s*"\K[^"]+' | sort -rV) \
+  && local VERS_MICROMAMBA=$(curl -fsSL "https://api.github.com/repos/mamba-org/micromamba-releases/releases?per_page=50" | grep -oP '"tag_name":\s*"\K[^"]+' | grep -viE '(alpha|beta|rc)' | sort -rV) \
   && if [ -n "${VER_MICROMAMBA_REQ}" ]; then
        local VER_MICROMAMBA_RE=${VER_MICROMAMBA_REQ#v} \
        && VER_MICROMAMBA_RE=${VER_MICROMAMBA_RE//./\\.} \
@@ -145,7 +145,7 @@ setup_java_base() {
 setup_java_maven() {
      local VER_MAVEN="${1:-3}" \
   && local ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
-  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -rV) \
+  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | grep -viE '(alpha|beta|rc)' | sort -rV) \
   && local VER_MAVEN_RE=${VER_MAVEN#v} \
   && VER_MAVEN_RE=${VER_MAVEN_RE//./\\.} \
   && VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -m1 -E "^${VER_MAVEN_RE}([.-]|$)") \
@@ -188,7 +188,7 @@ setup_node_pnpm() {
   local VER_PNPM_REQ="${1:-}" UNAME ARCH URL_PNPM TMPDIR ;
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
-  && local VERS_PNPM=$(curl -fsSL "https://api.github.com/repos/pnpm/pnpm/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v alpha | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_PNPM=$(curl -fsSL "https://api.github.com/repos/pnpm/pnpm/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(alpha|beta|rc)' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_PNPM_REQ}" ]; then
        local VER_PNPM_RE=${VER_PNPM_REQ#v} \
        && VER_PNPM_RE=${VER_PNPM_RE//./\\.} \
@@ -321,7 +321,7 @@ setup_julia() {
 
 setup_lua_base() {
     local VER_LUA_REQ="${1:-}" \
- && local VERS_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | grep -Po '(\d[\d|.]+)' | sort -rV) \
+ && local VERS_LUA=$(curl -sL "https://api.github.com/repos/lua/lua/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '^v\K\d+(\.\d+)*$' | sort -rV) \
  && if [ -n "${VER_LUA_REQ}" ]; then
       local VER_LUA_RE=${VER_LUA_REQ#v} \
       && VER_LUA_RE=${VER_LUA_RE//./\\.} \
@@ -330,7 +330,7 @@ setup_lua_base() {
       local VER_LUA=$(echo "${VERS_LUA}" | head -1)
     fi \
  && [ -n "${VER_LUA}" ] \
- && local URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
+ && local URL_LUA="https://github.com/lua/lua/archive/refs/tags/v${VER_LUA}.tar.gz" \
  && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
  && install_tar_gz $URL_LUA \
  && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
@@ -344,7 +344,7 @@ setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
  && local VER_LUA_ROCKS_REQ="${1:-}" \
- && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -Po '\d+\.\d+(\.\d+)?' | sort -rV) \
+ && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -viE '(alpha|beta|rc)' | grep -Po '\d+\.\d+(\.\d+)?' | sort -rV) \
  && if [ -n "${VER_LUA_ROCKS_REQ}" ]; then
       local VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_REQ#v} \
       && VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_RE//./\\.} \
@@ -368,7 +368,7 @@ setup_bazel() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
   && local VER_BAZEL_REQ="${1:-}" \
-  && local VERS_BAZEL=$(curl -sL "https://api.github.com/repos/bazelbuild/bazel/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_BAZEL=$(curl -sL "https://api.github.com/repos/bazelbuild/bazel/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_BAZEL_REQ}" ]; then
        local VER_BAZEL_RE=${VER_BAZEL_REQ#v} \
        && VER_BAZEL_RE=${VER_BAZEL_RE//./\\.} \
@@ -386,7 +386,7 @@ setup_bazel() {
 
 setup_gradle() {
      local VER_GRADLE_REQ="${1:-}" \
-  && local VERS_GRADLE=$(curl -sL "https://api.github.com/repos/gradle/gradle/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'M' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_GRADLE=$(curl -sL "https://api.github.com/repos/gradle/gradle/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'M' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_GRADLE_REQ}" ]; then
        local VER_GRADLE_RE=${VER_GRADLE_REQ#v} \
        && VER_GRADLE_RE=${VER_GRADLE_RE//./\\.} \
