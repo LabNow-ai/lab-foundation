@@ -31,8 +31,8 @@ setup_duckdb() {
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
   && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
   && if [ "${FILE_DUCKDB##*.}" = zip ]; then unzip -q "${TMP_FILE}" -d /tmp; else tar -xzf "${TMP_FILE}" -C /tmp; fi \
-  && mkdir -pv /opt/bin \
-  && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
+  && sudo mkdir -pv /opt/bin \
+  && sudo install -m 0755 /tmp/duckdb /opt/bin/duckdb \
   && rm -f "${TMP_FILE}" /tmp/duckdb ;
   /opt/bin/duckdb --version && echo "@ DuckDB installed" || return 1 ;
 }
@@ -49,7 +49,7 @@ setup_mongosh_client() {
   # from: https://www.mongodb.com/docs/mongodb-shell/install/
   local DISTRO=$(lsb_release -cs)
   curl -sL https://www.mongodb.org/static/pgp/server-${VER_MONGOSH}.asc | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc
-  echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu ${DISTRO}/mongodb-org/${VER_MONGOSH} multiverse" > /etc/apt/sources.list.d/mongodb-org-${VER_MONGOSH}.list
+  echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu ${DISTRO}/mongodb-org/${VER_MONGOSH} multiverse" | sudo tee "/etc/apt/sources.list.d/mongodb-org-${VER_MONGOSH}.list" >/dev/null
   # will download ~38MB files and use ~218MB disk after installation
   sudo apt-get update && sudo apt-get -y install mongodb-mongosh
   type mongosh && echo "@ Version of mongosh client: $(mongosh --version)" || return 1
@@ -66,6 +66,7 @@ setup_redis_client() {
 
 
 setup_oracle_client() {
+  local ARCH OARCH PKG_ARCH LDAIO PAGE DL BUILD VER
   ARCH=$(uname -m)
   case "$ARCH" in
     x86_64)

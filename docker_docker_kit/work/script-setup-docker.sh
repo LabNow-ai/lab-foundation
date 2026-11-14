@@ -2,9 +2,9 @@
 
 
 setup_docker_compose() {
-     ARCH=$(uname -m) \
-  && VER_COMPOSE=$(curl -sL "https://api.github.com/repos/docker/compose/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+') \
-  && URL_COMPOSE="https://github.com/docker/compose/releases/download/v${VER_COMPOSE}/docker-compose-linux-${ARCH}" \
+     local ARCH=$(uname -m) \
+  && local VER_COMPOSE=$(curl -sL "https://api.github.com/repos/docker/compose/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+') \
+  && local URL_COMPOSE="https://github.com/docker/compose/releases/download/v${VER_COMPOSE}/docker-compose-linux-${ARCH}" \
   && echo "Downloading Compose from: ${URL_COMPOSE}" \
   && sudo curl -o /usr/bin/docker-compose -sL ${URL_COMPOSE} \
   && sudo chmod +x /usr/bin/docker-compose ;
@@ -12,9 +12,9 @@ setup_docker_compose() {
 }
 
 setup_docker_syncer() {
-     ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
-  && VER_SYNCER="$(curl -sL "https://api.github.com/repos/AliyunContainerService/image-syncer/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+')" \
-  && URL_SYNCER="https://github.com/AliyunContainerService/image-syncer/releases/download/v${VER_SYNCER}/image-syncer-v${VER_SYNCER}-linux-${ARCH}.tar.gz" \
+     local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
+  && local VER_SYNCER="$(curl -sL "https://api.github.com/repos/AliyunContainerService/image-syncer/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+')" \
+  && local URL_SYNCER="https://github.com/AliyunContainerService/image-syncer/releases/download/v${VER_SYNCER}/image-syncer-v${VER_SYNCER}-linux-${ARCH}.tar.gz" \
   && echo "Downloading image-syncer from: ${URL_SYNCER}" \
   && curl -o /tmp/image_syncer.tgz -sL ${URL_SYNCER} \
   && mkdir -pv /tmp/image_syncer && tar -zxvf /tmp/image_syncer.tgz -C /tmp/image_syncer \

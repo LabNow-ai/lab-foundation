@@ -23,51 +23,30 @@ registries_target=${DOCKER_MIRROR_REGISTRY:-}
 image_single=
 
 append_target_registries() {
-  if [ -n "$registries_target" ]; then
-    registries_target="${registries_target},$1"
-  else
-    registries_target=$1
-  fi
+  registries_target="${registries_target}${registries_target:+,}$1"
+}
+
+read_option_value() {
+  case "$2" in
+    *=*) option_value=${2#*=}; option_shift=1 ;;
+    *)
+      [ "$#" -ge 3 ] || { echo "Missing value for $1" >&2; exit 2; }
+      option_value=$3
+      option_shift=2
+      ;;
+  esac
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --file-workflow|--workflow-file)
-      [ "$#" -ge 2 ] || { echo "Missing value for $1" >&2; exit 2; }
-      file_workflow=$2
-      shift 2
-      ;;
-    --file-workflow=*|--workflow-file=*)
-      file_workflow=${1#*=}
-      shift
-      ;;
-    --image-namespace-src|--image-namespace)
-      [ "$#" -ge 2 ] || { echo "Missing value for $1" >&2; exit 2; }
-      namespace_img_src=$2
-      shift 2
-      ;;
-    --image-namespace-src=*|--image-namespace=*)
-      namespace_img_src=${1#*=}
-      shift
-      ;;
-    --image-namespace-dst)
-      [ "$#" -ge 2 ] || { echo "Missing value for --image-namespace-dst" >&2; exit 2; }
-      namespace_img_dst=$2
-      shift 2
-      ;;
-    --image-namespace-dst=*)
-      namespace_img_dst=${1#*=}
-      shift
-      ;;
-    --source-registry)
-      [ "$#" -ge 2 ] || { echo "Missing value for $1" >&2; exit 2; }
-      registry_source=$2
-      shift 2
-      ;;
-    --source-registry=*)
-      registry_source=${1#*=}
-      shift
-      ;;
+    --file-workflow|--workflow-file|--file-workflow=*|--workflow-file=*)
+      read_option_value "$1" "$@"; file_workflow=$option_value; shift "$option_shift" ;;
+    --image-namespace-src|--image-namespace|--image-namespace-src=*|--image-namespace=*)
+      read_option_value "$1" "$@"; namespace_img_src=$option_value; shift "$option_shift" ;;
+    --image-namespace-dst|--image-namespace-dst=*)
+      read_option_value "$1" "$@"; namespace_img_dst=$option_value; shift "$option_shift" ;;
+    --source-registry|--source-registry=*)
+      read_option_value "$1" "$@"; registry_source=$option_value; shift "$option_shift" ;;
     --target-registry)
       shift
       target_found=false
@@ -82,24 +61,10 @@ while [ "$#" -gt 0 ]; do
       append_target_registries "${1#*=}"
       shift
       ;;
-    --file-auth|--auth-file)
-      [ "$#" -ge 2 ] || { echo "Missing value for $1" >&2; exit 2; }
-      file_auth=$2
-      shift 2
-      ;;
-    --file-auth=*|--auth-file=*)
-      file_auth=${1#*=}
-      shift
-      ;;
-    --image)
-      [ "$#" -ge 2 ] || { echo "Missing value for $1" >&2; exit 2; }
-      image_single=$2
-      shift 2
-      ;;
-    --image=*)
-      image_single=${1#*=}
-      shift
-      ;;
+    --file-auth|--auth-file|--file-auth=*|--auth-file=*)
+      read_option_value "$1" "$@"; file_auth=$option_value; shift "$option_shift" ;;
+    --image|--image=*)
+      read_option_value "$1" "$@"; image_single=$option_value; shift "$option_shift" ;;
     --help|-h)
       usage
       exit 0
@@ -145,9 +110,7 @@ else
     echo "Failed to parse workflow file: $file_workflow" >&2
     exit 1
   fi
-  while IFS= read -r name_job || [ -n "$name_job" ]; do
-    printf '%s\n' "$name_job" | tr ',' '\n' >> "$file_names"
-  done < "$file_names_raw"
+  tr ',' '\n' < "$file_names_raw" > "$file_names"
 fi
 
 printf '%s\n' "$registries_target" | tr ',' '\n' |
@@ -157,13 +120,18 @@ if [ ! -s "$file_targets" ]; then
 fi
 
 status_total=0
+run_image_sync() {
+  image-syncer "$@"
+  status_sync=$?
+  status_total=$((status_total + status_sync))
+}
+
 while IFS= read -r image_name || [ -n "$image_name" ]; do
+  path_image_src=$image_name
+  path_image_dst=$image_name
   if [ -z "$image_single" ]; then
     path_image_src=$namespace_img_src/$image_name
     path_image_dst=$namespace_img_dst/$image_name
-  else
-    path_image_src=$image_name
-    path_image_dst=$image_name
   fi
   image_source=$registry_source/$path_image_src
   echo "Docker image sync job name found: $path_image_src"
@@ -179,14 +147,12 @@ while IFS= read -r image_name || [ -n "$image_name" ]; do
       fi
     done < "$file_targets"
     export TARGET_REGISTRIES
-    if ! yq -n -o=json '{"images": {(strenv(SOURCE_IMAGE)): (strenv(TARGET_REGISTRIES) | split(","))}}' > "$file_config"; then
+    if ! yq -n -o=json '{(strenv(SOURCE_IMAGE)): (strenv(TARGET_REGISTRIES) | split(","))}' > "$file_config"; then
       echo "Failed to generate image config for $path_image_src" >&2
       status_total=$((status_total + 1))
       continue
     fi
-    image-syncer --proc=16 --retries=2 "--auth=$file_auth" "--images=$file_config"
-    status_sync=$?
-    status_total=$((status_total + status_sync))
+    run_image_sync --proc=16 --retries=2 "--auth=$file_auth" "--images=$file_config"
   else
     if [ -z "${DOCKER_MIRROR_REGISTRY_USERNAME:-}" ] || [ -z "${DOCKER_MIRROR_REGISTRY_PASSWORD:-}" ]; then
       echo "DOCKER_MIRROR_REGISTRY_USERNAME and DOCKER_MIRROR_REGISTRY_PASSWORD are required without --file-auth" >&2
@@ -206,9 +172,7 @@ while IFS= read -r image_name || [ -n "$image_name" ]; do
         status_total=$((status_total + 1))
         continue
       fi
-      image-syncer --proc=16 --retries=2 "--config=$file_config"
-      status_sync=$?
-      status_total=$((status_total + status_sync))
+      run_image_sync --proc=16 --retries=2 "--config=$file_config"
     done < "$file_targets"
   fi
 done < "$file_names"

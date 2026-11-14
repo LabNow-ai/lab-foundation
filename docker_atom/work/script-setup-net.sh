@@ -1,5 +1,6 @@
 setup_traefik() {
-     local VER_TRAEFIK_REQ="${1:-}" \
+     local ARCH=$(dpkg --print-architecture) \
+  && local VER_TRAEFIK_REQ="${1:-}" \
   && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TRAEFIK_REQ}" ]; then
        local VER_TRAEFIK_RE=${VER_TRAEFIK_REQ#v} \
@@ -9,16 +10,16 @@ setup_traefik() {
        local VER_TRAEFIK=$(echo "${VERS_TRAEFIK}" | head -1)
      fi \
   && [ -n "${VER_TRAEFIK}" ] \
-  && URL_TRAEFIK="https://github.com/traefik/traefik/releases/download/v${VER_TRAEFIK}/traefik_v${VER_TRAEFIK}_linux_$(dpkg --print-architecture).tar.gz" \
+  && local URL_TRAEFIK="https://github.com/traefik/traefik/releases/download/v${VER_TRAEFIK}/traefik_v${VER_TRAEFIK}_linux_${ARCH}.tar.gz" \
   && curl -o /tmp/TMP.tgz -sL "${URL_TRAEFIK}" \
-  && mkdir -pv /opt/bin && tar -C /opt/bin -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
-  && chmod +x /opt/bin/traefik && ln -sf /opt/bin/traefik /usr/bin/ ;
+  && sudo mkdir -pv /opt/bin && sudo tar -C /opt/bin -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
+  && sudo chmod +x /opt/bin/traefik && sudo ln -sf /opt/bin/traefik /usr/bin/ ;
   type traefik && echo "@ Version of traefik: $(traefik version)" || return 1 ;
 }
 
 setup_caddy() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
+     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_CADDY_REQ="${1:-}" \
   && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(beta|rc)' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_CADDY_REQ}" ]; then
@@ -29,10 +30,10 @@ setup_caddy() {
        local VER_CADDY=$(echo "${VERS_CADDY}" | head -1)
      fi \
   && [ -n "${VER_CADDY}" ] \
-  && URL_CADDY="https://github.com/caddyserver/caddy/releases/download/v${VER_CADDY}/caddy_${VER_CADDY}_${UNAME}_${ARCH}.tar.gz" \
+  && local URL_CADDY="https://github.com/caddyserver/caddy/releases/download/v${VER_CADDY}/caddy_${VER_CADDY}_${UNAME}_${ARCH}.tar.gz" \
   && echo "Downloading Caddy ${VER_CADDY} from ${URL_CADDY}" \
   && curl -o /tmp/TMP.tgz -sL "${URL_CADDY}" && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
-  && mkdir -pv /opt/bin/ && mv /tmp/caddy /opt/bin/ && ln -sf /opt/bin/caddy /usr/local/bin/ ;
+  && sudo mkdir -pv /opt/bin/ && sudo mv /tmp/caddy /opt/bin/ && sudo ln -sf /opt/bin/caddy /usr/local/bin/ ;
   type caddy && echo "@ Version of caddy: $(caddy version)" || return 1 ;
 }
 
@@ -55,8 +56,8 @@ setup_oauth2_proxy() {
   && echo "Installing oauth2-proxy v${VER_OAUTH2_PROXY} for arch ${ARCH} from: ${URL_OAUTH2_PROXY}" \
   && curl -fSL "${URL_OAUTH2_PROXY}" -o /tmp/oauth2-proxy.tar.gz \
   && tar -xzf /tmp/oauth2-proxy.tar.gz -C /tmp \
-  && install -m 0755 -D "/tmp/oauth2-proxy-v${VER_OAUTH2_PROXY}.linux-${ARCH}/oauth2-proxy" /opt/bin/oauth2-proxy \
-  && ln -sf /opt/bin/oauth2-proxy /usr/bin/oauth2-proxy \
+  && sudo install -m 0755 -D "/tmp/oauth2-proxy-v${VER_OAUTH2_PROXY}.linux-${ARCH}/oauth2-proxy" /opt/bin/oauth2-proxy \
+  && sudo ln -sf /opt/bin/oauth2-proxy /usr/bin/oauth2-proxy \
   && rm -rf /tmp/oauth2-proxy* ;
   type oauth2-proxy && echo "@ Installed oauth2-proxy: $(oauth2-proxy --version)" ;
 }
