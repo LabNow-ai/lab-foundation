@@ -61,5 +61,5 @@ jobs:
           printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
           printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
           docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
-            sh /opt/utils/script-sync-image.sh --auth-file=/tmp/.github/workflows/auth.json \
-              --workflow-file=".github/workflows/build-docker-db.yml"
+            sh /opt/utils/script-sync-image.sh --file-auth=/tmp/.github/workflows/auth.json \
+              --file-workflow=".github/workflows/build-docker-db.yml"

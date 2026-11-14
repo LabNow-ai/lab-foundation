@@ -24,6 +24,7 @@ docker run --rm \
 ```
 
 Fill the environment variables above, and more details can be found in `./work/script-sync-image.sh`.
+For workflow-based syncs, `IMG_NAMESPACE_SRC` selects the source namespace and `IMG_NAMESPACE_DST` optionally selects a different destination namespace; when omitted, the destination namespace matches the source.
 
 ### Sync images in batch
 

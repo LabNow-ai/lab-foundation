@@ -21,12 +21,15 @@ CI_PROJECT_SPACE=$(echo "${CI_PROJECT_BRANCH}" | cut -f1 -d'/')
 export CI_PROJECT_NAMESPACE="$(dirname ${CI_PROJECT_NAME})${NAMESPACE_SUFFIX}" ;
 
 export IMG_NAMESPACE=$(echo "${CI_PROJECT_NAMESPACE}" | awk '{print tolower($0)}')
-export IMG_PREFIX_SRC=$(echo "${REGISTRY_SRC:-"quay.io"}/${IMG_NAMESPACE}"   | awk '{print tolower($0)}')
-export IMG_PREFIX_DST=$(echo "${REGISTRY_DST:-"docker.io"}/${IMG_NAMESPACE}" | awk '{print tolower($0)}')
+export IMG_NAMESPACE_SRC=$(echo "${IMG_NAMESPACE_SRC:-$IMG_NAMESPACE}" | awk '{print tolower($0)}')
+export IMG_NAMESPACE_DST=$(echo "${IMG_NAMESPACE_DST:-$IMG_NAMESPACE}" | awk '{print tolower($0)}')
+export IMG_PREFIX_SRC=$(echo "${REGISTRY_SRC:-"quay.io"}/${IMG_NAMESPACE_SRC}" | awk '{print tolower($0)}')
+export IMG_PREFIX_DST=$(echo "${REGISTRY_DST:-"docker.io"}/${IMG_NAMESPACE_SRC}" | awk '{print tolower($0)}')
 export TAG_SUFFIX="-$(git rev-parse --short HEAD)"
 
 echo "--------> CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}"
-echo "--------> DOCKER_IMG_NAMESPACE=${IMG_NAMESPACE}"
+echo "--------> DOCKER_IMG_NAMESPACE_SRC=${IMG_NAMESPACE_SRC}"
+echo "--------> DOCKER_IMG_NAMESPACE_DST=${IMG_NAMESPACE_DST}"
 echo "--------> DOCKER_IMG_PREFIX_SRC=${IMG_PREFIX_SRC}"
 echo "--------> DOCKER_IMG_PREFIX_DST=${IMG_PREFIX_DST}"
 echo "--------> DOCKER_TAG_SUFFIX=${TAG_SUFFIX}"
