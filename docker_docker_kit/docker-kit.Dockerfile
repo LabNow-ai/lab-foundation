@@ -10,7 +10,7 @@ ENV XDG_RUNTIME_DIR="/tmp"
 COPY work /opt/utils/
 
 RUN set -eux \
- && chmod +x /opt/utils/*.sh \
+ && chmod +x /opt/utils/*.sh && ln -sf /opt/utils/script-sync-image.sh /usr/local/bin/ \
  && source /opt/utils/script-setup-core.sh   && setup_yq \
  && source /opt/utils/script-setup-docker.sh && setup_docker_compose && setup_docker_syncer \
  ## Clean up and display components version information...

@@ -3,21 +3,21 @@
 usage() {
   cat <<'EOF'
 Usage: script-sync-image.sh [IMAGE] [options]
-  --workflow-file FILE     GitHub Actions workflow YAML
+  --file-auth FILE         image-syncer auth file
+  --file-workflow FILE     GitHub Actions workflow YAML
   --image-namespace NAME   Image namespace (default: IMG_NAMESPACE or library)
   --source-registry NAME   Source registry (default: REGISTRY_URL or docker.io)
   --target-registry NAME   Target registry; repeat or use comma-separated values
-  --auth-file FILE         image-syncer auth file
   --image IMAGE            Sync one fully-qualified image path instead of workflow jobs
   --help                   Show this help
 EOF
 }
 
-workflow_file=.github/workflows/build-docker.yml
+file_workflow=.github/workflows/build-docker.yml
+file_auth=${FILE_AUTH:-}
 image_namespace=${IMG_NAMESPACE:-library}
-source_registry=${REGISTRY_URL-docker.io}
+source_registry=${REGISTRY_URL:-docker.io}
 target_registries=${DOCKER_MIRROR_REGISTRY:-}
-auth_file=${FILE_AUTH:-}
 single_image=
 
 append_targets() {
@@ -30,13 +30,13 @@ append_targets() {
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --workflow-file)
-      [ "$#" -ge 2 ] || { echo "Missing value for --workflow-file" >&2; exit 2; }
-      workflow_file=$2
+    --file-workflow)
+      [ "$#" -ge 2 ] || { echo "Missing value for --file-workflow" >&2; exit 2; }
+      file_workflow=$2
       shift 2
       ;;
-    --workflow-file=*)
-      workflow_file=${1#*=}
+    --file-workflow=*)
+      file_workflow=${1#*=}
       shift
       ;;
     --image-namespace)
@@ -71,13 +71,13 @@ while [ "$#" -gt 0 ]; do
       append_targets "${1#*=}"
       shift
       ;;
-    --auth-file)
-      [ "$#" -ge 2 ] || { echo "Missing value for --auth-file" >&2; exit 2; }
-      auth_file=$2
+    --file-auth)
+      [ "$#" -ge 2 ] || { echo "Missing value for --file-auth" >&2; exit 2; }
+      file_auth=$2
       shift 2
       ;;
-    --auth-file=*)
-      auth_file=${1#*=}
+    --file-auth=*)
+      file_auth=${1#*=}
       shift
       ;;
     --image)
@@ -122,12 +122,12 @@ config_file=$tmp_dir/config.json
 if [ -n "$single_image" ]; then
   printf '%s\n' "$single_image" > "$names_file"
 else
-  if [ ! -r "$workflow_file" ]; then
-    echo "Workflow file is not readable: $workflow_file" >&2
+  if [ ! -r "$file_workflow" ]; then
+    echo "Workflow file is not readable: $file_workflow" >&2
     exit 1
   fi
-  if ! yq -r '.jobs[]? | select(.name != null) | .name' "$workflow_file" > "$raw_names_file"; then
-    echo "Failed to parse workflow file: $workflow_file" >&2
+  if ! yq -r '.jobs[]? | select(.name != null) | .name' "$file_workflow" > "$raw_names_file"; then
+    echo "Failed to parse workflow file: $file_workflow" >&2
     exit 1
   fi
   while IFS= read -r job_name || [ -n "$job_name" ]; do
@@ -151,7 +151,7 @@ while IFS= read -r image || [ -n "$image" ]; do
   source_image=$source_registry/$image_path
   echo "Docker image sync job name found: $image_path"
 
-  if [ -n "$auth_file" ]; then
+  if [ -n "$file_auth" ]; then
     export SOURCE_IMAGE=$source_image TARGET_REGISTRIES=
     while IFS= read -r target_registry || [ -n "$target_registry" ]; do
       destination=$target_registry/$image_path
@@ -167,16 +167,16 @@ while IFS= read -r image || [ -n "$image" ]; do
       ret=$((ret + 1))
       continue
     fi
-    image-syncer --proc=16 --retries=2 "--auth=$auth_file" "--images=$config_file"
+    image-syncer --proc=16 --retries=2 "--auth=$file_auth" "--images=$config_file"
     status=$?
     ret=$((ret + status))
   else
     if [ -z "${DOCKER_MIRROR_REGISTRY_USERNAME:-}" ] || [ -z "${DOCKER_MIRROR_REGISTRY_PASSWORD:-}" ]; then
-      echo "DOCKER_MIRROR_REGISTRY_USERNAME and DOCKER_MIRROR_REGISTRY_PASSWORD are required without --auth-file" >&2
+      echo "DOCKER_MIRROR_REGISTRY_USERNAME and DOCKER_MIRROR_REGISTRY_PASSWORD are required without --file-auth" >&2
       exit 1
     fi
     if [ -z "${DOCKER_REGISTRY_USERNAME:-}" ] || [ -z "${DOCKER_REGISTRY_PASSWORD:-}" ]; then
-      echo "DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD are required without --auth-file" >&2
+      echo "DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD are required without --file-auth" >&2
       exit 254
     fi
     while IFS= read -r target_registry || [ -n "$target_registry" ]; do
