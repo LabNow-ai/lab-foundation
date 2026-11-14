@@ -44,8 +44,8 @@ install_mvn() { cut -d "%" -f 1 "$1" | xargs -r -n1 -I {} mvn dependency:copy -D
 install__clean(){
   type apt-get && sudo apt-get autoremove -y && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* ;
   type npm     && npm cache clean --force ;
-  type mamba   && mamba clean -ya && rm -rf ~/micromamba ;
-  type conda   && conda clean -ya && ( rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true ) ;
+  type mamba   && sudo mamba clean -ya && rm -rf ~/micromamba ;
+  type conda   && sudo conda clean -ya && ( sudo rm -rf "${CONDA_PREFIX:-/opt/conda}"/pkgs/* || true ) ;
   sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type f -name "*.py[co]" -delete 2>/dev/null || true ;
   sudo find "${CONDA_PREFIX:-/opt/conda}"/lib -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true ;
 
@@ -74,7 +74,7 @@ list_installed_packages() {
 }
 
 fix_permission() {
-  local GROUP_ID=${1:-0}; shift 1;
+  local GROUP_ID=${1:-0} d; shift 1;
   for d in "$@"; do
       sudo find "${d}" \
           ! \( \

@@ -36,6 +36,7 @@ cat ${PGDATA}/conf.d/*
 # docker_temp_server_stop && sleep 2s && docker_temp_server_start
 
 enable_all_extensions() {
+  local e
   psql "$@" -At -c "SELECT name FROM pg_available_extensions WHERE name NOT IN (SELECT extname FROM pg_extension)" |
   while read e; do psql "$@" -c "CREATE EXTENSION IF NOT EXISTS \"$e\" CASCADE" >/dev/null || echo "Skip $e"; done
 }

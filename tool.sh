@@ -88,6 +88,7 @@ clear_images() {
 
 
 remove_folder() {
+    local dir
     for dir in "$@"; do
         if [ -d "$dir" ]; then
             echo "Removing folder: $dir" ;

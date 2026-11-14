@@ -21,6 +21,8 @@ namespace_img_dst=${IMG_NAMESPACE_DST:-}
 registry_source=${REGISTRY_URL:-docker.io}
 registries_target=${DOCKER_MIRROR_REGISTRY:-}
 image_single=
+option_value=
+option_shift=
 
 append_target_registries() {
   registries_target="${registries_target}${registries_target:+,}$1"
@@ -122,8 +124,7 @@ fi
 status_total=0
 run_image_sync() {
   image-syncer "$@"
-  status_sync=$?
-  status_total=$((status_total + status_sync))
+  status_total=$((status_total + $?))
 }
 
 while IFS= read -r image_name || [ -n "$image_name" ]; do

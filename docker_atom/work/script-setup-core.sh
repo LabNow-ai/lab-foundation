@@ -55,7 +55,7 @@ EOF
   && sudo conda update --all --quiet --yes ;
 
   # remove non-necessary folder/symlink "python3.1" exists
-  rm -rf "${CONDA_PREFIX}"/bin/python3.1 "${CONDA_PREFIX}"/lib/python3.1 ;
+  sudo rm -rf "${CONDA_PREFIX}"/bin/python3.1 "${CONDA_PREFIX}"/lib/python3.1 ;
 
   # These conda pkgs shouldn't be removed (otherwise will cause RemoveError) since they are directly required by conda: pip setuptools pycosat pyopenssl requests ruamel_yaml
   #    CONDA_PY_PKGS=$(conda list | grep "py3" | cut -d " " -f 1 | sed "/#/d;/conda/d;/pip/d;/setuptools/d;/pycosat/d;/pyopenssl/d;/requests/d;/ruamel_yaml/d;") \
@@ -131,8 +131,15 @@ setup_java_base() {
        local URL_JDK_adoptium="https://api.github.com/repos/adoptium/temurin${VER_JDK_MAJOR}-binaries/releases/latest" \
     && local URL_JDK_DOWNLOAD=$(
       curl -sL "$URL_JDK_adoptium" | grep 'tar.gz' | grep -vE '.sha256|.sig|.json|debug|test' | grep "${ARCH}" | grep -i "$(uname)" \
-      | grep -oP "(https?://[^\s<>\'\"]*)" | grep -E "$(if [ "$IS_ALPINE" = true ]; then echo 'alpine'; else echo -v 'alpine'; fi)" | head -n1
+      | grep -oP "(https?://[^\s<>\'\"]*)" \
+      | if [ "$IS_ALPINE" = true ]; then grep -E 'alpine'; else grep -v 'alpine'; fi \
+      | head -n1
     ) ;
+  fi
+
+  if [ -z "$URL_JDK_DOWNLOAD" ]; then
+    echo "Failed to find a JDK ${VER_JDK_MAJOR} download for ${ARCH} (Alpine: ${IS_ALPINE})" >&2
+    return 1
   fi
 
   echo "Installing JDK version ${VER_JDK} from: ${URL_JDK_DOWNLOAD}" ;
@@ -309,7 +316,7 @@ setup_julia() {
   && local VER_JULIA_MAJOR=$(echo "${VER_JULIA}" | cut -d '.' -f1,2) \
   && local URL_JULIA="https://julialang-s3.julialang.org/bin/linux/${ARCH_2}/${VER_JULIA_MAJOR}/julia-${VER_JULIA}-linux-${ARCH_1}.tar.gz" \
   && echo "Downloading Julia version ${VER_JULIA} from: ${URL_JULIA}" \
-  && install_tar_gz $URL_JULIA \
+  && install_tar_gz "$URL_JULIA" \
   && sudo mv /opt/julia-* /opt/julia \
   && sudo ln -fs /opt/julia/bin/julia /usr/bin/julia \
   && sudo mkdir -pv /opt/julia/pkg \
@@ -355,7 +362,7 @@ setup_lua_rocks() {
  && [ -n "${VER_LUA_ROCKS}" ] \
  && local URL_LUA_ROCKS="https://luarocks.org/releases/luarocks-${VER_LUA_ROCKS}.tar.gz" \
  && echo "Downloading luarocks ${VER_LUA_ROCKS} from ${URL_LUA_ROCKS}" \
- && install_tar_gz $URL_LUA_ROCKS \
+ && install_tar_gz "$URL_LUA_ROCKS" \
  && sudo mv /opt/luarocks-* /tmp/luarocks && cd /tmp/luarocks \
  && sudo ./configure --prefix=${LUA_HOME:-"/opt/lua"} --with-lua-include=${LUA_HOME:-"/opt/lua"}/include && sudo make install \
  && sudo ln -sf /opt/lua/bin/lua* /usr/bin/ \

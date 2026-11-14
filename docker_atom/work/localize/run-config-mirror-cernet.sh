@@ -10,7 +10,7 @@ echo "Setup timezone, current date: $(date)"
 OS_ID=$(sed -n 's/^ID=//p' /etc/os-release | tr -d '"')
 echo "Found ${OS_ID} system, setting mirror for ${OS_ID}"
 
-FILE_DEB=$([ -f /etc/apt/sources.list.d/${OS_ID}.sources ] && echo /etc/apt/sources.list.d/${OS_ID}.sources || echo /etc/apt/sources.list)
+FILE_DEB=$([ -f "/etc/apt/sources.list.d/${OS_ID}.sources" ] && echo "/etc/apt/sources.list.d/${OS_ID}.sources" || echo /etc/apt/sources.list)
 if [ -f "$FILE_DEB" ]; then
   sudo sed -i 's|mirrors.*.com/ubuntu|mirrors.cernet.edu.cn/ubuntu|g'       "$FILE_DEB"
   sudo sed -i 's|archive.ubuntu.com/ubuntu|mirrors.cernet.edu.cn/ubuntu|g'  "$FILE_DEB"
