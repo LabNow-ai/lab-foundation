@@ -320,24 +320,25 @@ setup_julia() {
 
 
 setup_lua_base() {
-    local VER_LUA_REQ="${1:-}" \
- && local VERS_LUA=$(curl -sL "https://api.github.com/repos/lua/lua/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '^v\K\d+(\.\d+)*$' | sort -rV) \
- && if [ -n "${VER_LUA_REQ}" ]; then
-      local VER_LUA_RE=${VER_LUA_REQ#v} \
-      && VER_LUA_RE=${VER_LUA_RE//./\\.} \
-      && local VER_LUA=$(echo "${VERS_LUA}" | grep -m1 -E "^${VER_LUA_RE}([.-]|$)")
-    else
-      local VER_LUA=$(echo "${VERS_LUA}" | head -1)
-    fi \
- && [ -n "${VER_LUA}" ] \
- && local URL_LUA="https://github.com/lua/lua/archive/refs/tags/v${VER_LUA}.tar.gz" \
- && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
- && install_tar_gz $URL_LUA \
- && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
- && sudo make linux test && sudo make install INSTALL_TOP=${LUA_HOME:-"/opt/lua"} \
- && sudo ln -sf ${LUA_HOME:-"/opt/lua"}/bin/lua* /usr/bin/ \
- && rm -rf /tmp/lua ;
- type lua && echo "@ Version of LUA installed: $(lua -v)" || return -1 ;
+     VER_LUA_REQ="${1:-}" \
+  && VER_LUA_REQ="${VER_LUA_REQ#v}" \
+  && LUA_HOME="${LUA_HOME:-/opt/lua}" \
+  && VERS_JSON=$(curl -fsSL "https://api.github.com/repos/lua/lua/releases?per_page=50") \
+  && VERS_LUA=$(printf '%s\n' "$VERS_JSON" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\([0-9][0-9.]*\)".*/\1/p') \
+  && if [ -n "$VER_LUA_REQ" ]; then
+       VER_LUA=$(printf '%s\n' "$VERS_LUA" | grep -F -x "$VER_LUA_REQ" | sed -n '1p')
+       [ -n "$VER_LUA" ] || { echo "Lua version not found: $VER_LUA_REQ" >&2; exit 1; }
+     else
+       VER_LUA=$(printf '%s\n' "$VERS_LUA" | sed -n '1p')
+     fi \
+  && { [ -n "$VER_LUA" ] || { echo "No Lua release found" >&2; exit 1; }; } \
+  && URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
+  && echo "Downloading Lua ${VER_LUA} from ${URL_LUA}" \
+  && install_tar_gz "$URL_LUA" \
+  && (cd "/opt/lua-${VER_LUA}" && make linux test && sudo make install "INSTALL_TOP=$LUA_HOME") \
+  && sudo ln -sf "$LUA_HOME"/bin/lua* /usr/bin/ \
+  && sudo rm -rf "/opt/lua-${VER_LUA}" || exit 1 ;
+  type lua && echo "@ Version of Lua installed: $(lua -v)" || exit 1;
 }
 
 setup_lua_rocks() {
