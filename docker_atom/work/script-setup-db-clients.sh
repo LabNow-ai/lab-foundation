@@ -1,4 +1,4 @@
-source /opt/utils/script-utils.sh
+. /opt/utils/script-utils.sh
 
 
 setup_postgresql_client() {
@@ -8,7 +8,7 @@ setup_postgresql_client() {
   echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
   # will download ~9MB files and use ~55MB disk after installation
   sudo apt-get update && sudo apt-get -y install "postgresql-client-${VER_PG}"
-  type psql && echo "@ Version of psql client: $(psql --version)" || return -1
+  type psql && echo "@ Version of psql client: $(psql --version)" || return 1
 }
 
 setup_duckdb() {
@@ -17,7 +17,7 @@ setup_duckdb() {
   && local VERS_DUCKDB=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//' | sort -rV) \
   && if [ -n "${VER_DUCKDB_REQ}" ]; then
        local VER_DUCKDB_RE=${VER_DUCKDB_REQ#v} \
-       && VER_DUCKDB_RE=${VER_DUCKDB_RE//./\\.} \
+       && VER_DUCKDB_RE=$(printf '%s' "$VER_DUCKDB_RE" | sed 's/[.]/\\./g') \
        && local VER_DUCKDB=$(echo "${VERS_DUCKDB}" | grep -m1 -E "^${VER_DUCKDB_RE}([.-]|$)")
      else
        local VER_DUCKDB=$(echo "${VERS_DUCKDB}" | head -1)
@@ -25,22 +25,22 @@ setup_duckdb() {
   && [ -n "${VER_DUCKDB}" ] \
   && local FILE_DUCKDB="duckdb_cli-linux-${ARCH}.zip" \
   && local EXT_DUCKDB="zip" \
-  && if [[ "${VER_DUCKDB}" == 2.* ]]; then FILE_DUCKDB="duckdb-cli-linux-${ARCH}.tar.gz"; EXT_DUCKDB="tar.gz"; fi \
+  && case "${VER_DUCKDB}" in 2.*) FILE_DUCKDB="duckdb-cli-linux-${ARCH}.tar.gz"; EXT_DUCKDB="tar.gz" ;; esac \
   && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/${FILE_DUCKDB}" \
   && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.${EXT_DUCKDB}" \
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
   && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
-  && if [[ "${FILE_DUCKDB}" == *.zip ]]; then unzip -q "${TMP_FILE}" -d /tmp; else tar -xzf "${TMP_FILE}" -C /tmp; fi \
+  && if [ "${FILE_DUCKDB##*.}" = zip ]; then unzip -q "${TMP_FILE}" -d /tmp; else tar -xzf "${TMP_FILE}" -C /tmp; fi \
   && mkdir -pv /opt/bin \
   && install -m 0755 /tmp/duckdb /opt/bin/duckdb \
   && rm -f "${TMP_FILE}" /tmp/duckdb ;
-  /opt/bin/duckdb --version && echo "@ DuckDB installed" || return -1 ;
+  /opt/bin/duckdb --version && echo "@ DuckDB installed" || return 1 ;
 }
 
 setup_mysql_client() {
   # will download ~5MB files and use ~76MB disk after installation
   sudo apt-get update && sudo apt-get -y install mysql-client
-  type mysql && echo "@ Version of mysql client: $(mysql --version)" || return -1
+  type mysql && echo "@ Version of mysql client: $(mysql --version)" || return 1
 }
 
 
@@ -52,7 +52,7 @@ setup_mongosh_client() {
   echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu ${DISTRO}/mongodb-org/${VER_MONGOSH} multiverse" > /etc/apt/sources.list.d/mongodb-org-${VER_MONGOSH}.list
   # will download ~38MB files and use ~218MB disk after installation
   sudo apt-get update && sudo apt-get -y install mongodb-mongosh
-  type mongosh && echo "@ Version of mongosh client: $(mongosh --version)" || return -1
+  type mongosh && echo "@ Version of mongosh client: $(mongosh --version)" || return 1
 }
 
 
@@ -61,7 +61,7 @@ setup_redis_client() {
   curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
   echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
   sudo apt-get update && sudo apt-get -y install redis-tools
-  type redis-cli && echo "@ Version of redis-cli: $(redis-cli --version)" || return -1
+  type redis-cli && echo "@ Version of redis-cli: $(redis-cli --version)" || return 1
 }
 
 

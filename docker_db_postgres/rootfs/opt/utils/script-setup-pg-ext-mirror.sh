@@ -1,4 +1,4 @@
-export DISTRO_NAME=$(awk '{ print tolower($0) }' <<< $(lsb_release -is))
+export DISTRO_NAME=$(lsb_release -is | awk '{ print tolower($0) }')
 export DISTRO_CODE_NAME=$(lsb_release -cs)
 
 APT_KEYRING_DIR="/etc/apt/keyrings"

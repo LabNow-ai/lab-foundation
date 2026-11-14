@@ -3,7 +3,7 @@ setup_traefik() {
   && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TRAEFIK_REQ}" ]; then
        local VER_TRAEFIK_RE=${VER_TRAEFIK_REQ#v} \
-       && VER_TRAEFIK_RE=${VER_TRAEFIK_RE//./\\.} \
+       && VER_TRAEFIK_RE=$(printf '%s' "$VER_TRAEFIK_RE" | sed 's/[.]/\\./g') \
        && local VER_TRAEFIK=$(echo "${VERS_TRAEFIK}" | grep -m1 -E "^${VER_TRAEFIK_RE}([.-]|$)")
      else
        local VER_TRAEFIK=$(echo "${VERS_TRAEFIK}" | head -1)
@@ -13,7 +13,7 @@ setup_traefik() {
   && curl -o /tmp/TMP.tgz -sL "${URL_TRAEFIK}" \
   && mkdir -pv /opt/bin && tar -C /opt/bin -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
   && chmod +x /opt/bin/traefik && ln -sf /opt/bin/traefik /usr/bin/ ;
-  type traefik && echo "@ Version of traefik: $(traefik version)" || return -1 ;
+  type traefik && echo "@ Version of traefik: $(traefik version)" || return 1 ;
 }
 
 setup_caddy() {
@@ -23,7 +23,7 @@ setup_caddy() {
   && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(beta|rc)' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_CADDY_REQ}" ]; then
        local VER_CADDY_RE=${VER_CADDY_REQ#v} \
-       && VER_CADDY_RE=${VER_CADDY_RE//./\\.} \
+       && VER_CADDY_RE=$(printf '%s' "$VER_CADDY_RE" | sed 's/[.]/\\./g') \
        && local VER_CADDY=$(echo "${VERS_CADDY}" | grep -m1 -E "^${VER_CADDY_RE}([.-]|$)")
      else
        local VER_CADDY=$(echo "${VERS_CADDY}" | head -1)
@@ -33,18 +33,18 @@ setup_caddy() {
   && echo "Downloading Caddy ${VER_CADDY} from ${URL_CADDY}" \
   && curl -o /tmp/TMP.tgz -sL "${URL_CADDY}" && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
   && mkdir -pv /opt/bin/ && mv /tmp/caddy /opt/bin/ && ln -sf /opt/bin/caddy /usr/local/bin/ ;
-  type caddy && echo "@ Version of caddy: $(caddy version)" || return -1 ;
+  type caddy && echo "@ Version of caddy: $(caddy version)" || return 1 ;
 }
 
 setup_oauth2_proxy() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/armv7/') ;
-  [[ "$ARCH" =~ ^(amd64|arm64|armv7)$ ]] || { echo "Unsupported architecture for oauth2-proxy: $(uname -m)"; return 1; }
+  case "$ARCH" in amd64|arm64|armv7) ;; *) echo "Unsupported architecture for oauth2-proxy: $(uname -m)"; return 1 ;; esac
 
      local VER_OAUTH2_PROXY_REQ="${1:-}" \
   && local VERS_OAUTH2_PROXY=$(curl -sL "https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(?<=v)?\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_OAUTH2_PROXY_REQ}" ]; then
        local VER_OAUTH2_PROXY_RE=${VER_OAUTH2_PROXY_REQ#v} \
-       && VER_OAUTH2_PROXY_RE=${VER_OAUTH2_PROXY_RE//./\\.} \
+       && VER_OAUTH2_PROXY_RE=$(printf '%s' "$VER_OAUTH2_PROXY_RE" | sed 's/[.]/\\./g') \
        && local VER_OAUTH2_PROXY=$(echo "${VERS_OAUTH2_PROXY}" | grep -m1 -E "^${VER_OAUTH2_PROXY_RE}([.-]|$)")
      else
        local VER_OAUTH2_PROXY=$(echo "${VERS_OAUTH2_PROXY}" | head -1)
