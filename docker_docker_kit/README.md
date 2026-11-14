@@ -4,7 +4,7 @@ In this docker image (DockerKit), the following tools are included:
 
 - [docker-compose](https://github.com/docker/compose): tool for running multi-container applications on Docker.
 
-- [image-syncer](https://github.com/AliyunContainerService/image-syncer): along with some Python scripts used to sync docker images between docker registries.
+- [image-syncer](https://github.com/AliyunContainerService/image-syncer): used to sync docker images between docker registries.
 
 ## Image Syncer
 
@@ -20,10 +20,10 @@ docker run --rm \
   -e DOCKER_REGISTRY_USERNAME='' \
   -e DOCKER_MIRROR_REGISTRY_USERNAME='' \
   -e DOCKER_MIRROR_REGISTRY_PASSWORD='' \
-  labnow/docker-kit python /opt/utils/image-syncer/run_sync.py library/ubuntu --source-registry='quay.io' --target-registry='docker.io'  
+  labnow/docker-kit sh /opt/utils/script-sync-image.sh library/ubuntu --source-registry='quay.io' --target-registry='docker.io'
 ```
 
-Fill the environment variables above, and more details can be found in code: `./work/image-syncer/run_sync.py`.
+Fill the environment variables above, and more details can be found in `./work/script-sync-image.sh`.
 
 ### Sync images in batch
 

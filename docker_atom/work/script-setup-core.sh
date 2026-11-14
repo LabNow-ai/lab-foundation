@@ -419,7 +419,7 @@ setup_yq() {
   && echo "Installing yq v${VER_YQ} for arch ${ARCH} from: ${URL_YQ}" \
   && curl -fSL "${URL_YQ}" -o /tmp/yq \
   && install -m 0755 -D /tmp/yq /opt/bin/yq \
-  && ln -sf /opt/bin/yq /usr/bin/yq \
+  && sudo ln -sf /opt/bin/yq /usr/bin/yq \
   && rm -f /tmp/yq ;
   type yq && echo "@ Installed yq: $(yq --version)" ;
 }
