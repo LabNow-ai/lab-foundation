@@ -1,4 +1,4 @@
-source /opt/utils/script-utils.sh
+. /opt/utils/script-utils.sh
 
 
 setup_mamba() {
@@ -6,10 +6,10 @@ setup_mamba() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/64/') \
   && local VER_MICROMAMBA_REQ="${1:-}" \
-  && local VERS_MICROMAMBA=$(curl -fsSL "https://api.github.com/repos/mamba-org/micromamba-releases/releases?per_page=50" | grep -oP '"tag_name":\s*"\K[^"]+' | sort -rV) \
+  && local VERS_MICROMAMBA=$(curl -fsSL "https://api.github.com/repos/mamba-org/micromamba-releases/releases?per_page=50" | grep -oP '"tag_name":\s*"\K[^"]+' | grep -viE '(alpha|beta|rc)' | sort -rV) \
   && if [ -n "${VER_MICROMAMBA_REQ}" ]; then
        local VER_MICROMAMBA_RE=${VER_MICROMAMBA_REQ#v} \
-       && VER_MICROMAMBA_RE=${VER_MICROMAMBA_RE//./\\.} \
+       && VER_MICROMAMBA_RE=$(printf '%s' "$VER_MICROMAMBA_RE" | sed 's/[.]/\\./g') \
        && local VER_MICROMAMBA=$(echo "${VERS_MICROMAMBA}" | grep -m1 -E "^${VER_MICROMAMBA_RE}([.-]|$)")
      else
        local VER_MICROMAMBA=$(echo "${VERS_MICROMAMBA}" | head -1)
@@ -24,12 +24,12 @@ setup_mamba() {
   && printf "channels:\n"       | sudo tee -a /etc/conda/.condarc \
   && printf "  - conda-forge\n" | sudo tee -a /etc/conda/.condarc \
   && cat /etc/conda/.condarc ;
-  type mamba && echo "@ Version of mamba: $(mamba info)" || return -1 ;
+  type mamba && echo "@ Version of mamba: $(mamba info)" || return 1 ;
 }
 
 
 setup_conda_postprocess() {
-  type conda || return -1 ;
+  type conda || return 1 ;
 
   # If python exists, set pypi source
   if [ -f "$(which python)" ]; then
@@ -101,7 +101,7 @@ setup_nvtop() {
   && make && sudo make install \
   && cd "${DIRECTORY}" && rm -rf /tmp/nvtop \
   && sudo apt-get -qq remove -y libncurses5-dev libdrm-dev libsystemd-dev libudev-dev ;
-  type nvtop && echo "Version of nvtop: $(nvtop --version)" || return -1 ;
+  type nvtop && echo "Version of nvtop: $(nvtop --version)" || return 1 ;
 }
 
 
@@ -117,11 +117,11 @@ setup_java_base() {
   && echo "Installing JDK ${ARCH} of specified major version: ${VER_JDK_MAJOR}" ;
   
   local VER_JDK="$VER_JDK_MAJOR" ;
-  if [[ "$VER_JDK_MAJOR" == "latest" ]] || { [[ "$VER_JDK_MAJOR" =~ ^[0-9]+$ ]] && [ "$VER_JDK_MAJOR" -gt 20 ]; }; then
+  if [ "$VER_JDK_MAJOR" = "latest" ] || { case "$VER_JDK_MAJOR" in ''|*[!0-9]*) false ;; *) [ "$VER_JDK_MAJOR" -gt 20 ] ;; esac; }; then
     PAGE_JDK_DOWNLOAD="https://www.oracle.com/java/technologies/downloads/"
     PAGE_JDK=$(curl -sL --fail "$PAGE_JDK_DOWNLOAD" || { echo "Failed to fetch Oracle JDK download page" && return 1; } )
 
-    if [[ "$VER_JDK_MAJOR" == "latest" ]]; then
+    if [ "$VER_JDK_MAJOR" = "latest" ]; then
       VER_JDK=$(echo "$PAGE_JDK" | grep -oE 'jdk-[0-9]+' | sed 's/jdk-//' | sort -rV | head -1) ;  
     fi ;
 
@@ -137,17 +137,17 @@ setup_java_base() {
 
   echo "Installing JDK version ${VER_JDK} from: ${URL_JDK_DOWNLOAD}" ;
   install_tar_gz "${URL_JDK_DOWNLOAD}" && mv /opt/jdk* /opt/jdk && ln -sf /opt/jdk/bin/* /usr/bin/ ;
-  type java  && echo "@ Version of Java (java):  $(java -version)"  || return -1 ;
-  type javac && echo "@ Version of Java (javac): $(javac -version)" || return -1 ;
+  type java  && echo "@ Version of Java (java):  $(java -version)"  || return 1 ;
+  type javac && echo "@ Version of Java (javac): $(javac -version)" || return 1 ;
 }
 
 
 setup_java_maven() {
      local VER_MAVEN="${1:-3}" \
   && local ATOM_MAVEN=$(curl -sL https://maven.apache.org/docs/history.html | grep '/ref/') \
-  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | sort -rV) \
+  && local VERS_MAVEN=$(echo "${ATOM_MAVEN}" | grep -oP '(?<=/ref/)[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-z]+-[0-9]+)?(?=/)' | grep -viE '(alpha|beta|rc)' | sort -rV) \
   && local VER_MAVEN_RE=${VER_MAVEN#v} \
-  && VER_MAVEN_RE=${VER_MAVEN_RE//./\\.} \
+  && VER_MAVEN_RE=$(printf '%s' "$VER_MAVEN_RE" | sed 's/[.]/\\./g') \
   && VER_MAVEN=$(echo "${VERS_MAVEN}" | grep -m1 -E "^${VER_MAVEN_RE}([.-]|$)") \
   && [ -n "${VER_MAVEN}" ] \
   && local URL_MAVEN="https://archive.apache.org/dist/maven/maven-3/${VER_MAVEN}/binaries/apache-maven-${VER_MAVEN}-bin.zip" \
@@ -155,7 +155,7 @@ setup_java_maven() {
   && install_zip "${URL_MAVEN}" \
   && mv "/opt/apache-maven-${VER_MAVEN}" /opt/maven \
   && ln -sf /opt/maven/bin/mvn* /usr/bin/ ;
-  type mvn && echo "@ Version of Maven: $(mvn --version)" || return -1 ;
+  type mvn && echo "@ Version of Maven: $(mvn --version)" || return 1 ;
 }
 
 
@@ -165,7 +165,7 @@ setup_node_base() {
   && local ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/') \
   && local VERS_NODEJS=$(curl -sL "https://api.github.com/repos/nodejs/node/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi alpha | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_NODEJS_REQ}" ]; then
-          local VER_NODEJS_RE=${VER_NODEJS_REQ#v} && VER_NODEJS_RE=${VER_NODEJS_RE//./\\.} \
+          local VER_NODEJS_RE=${VER_NODEJS_REQ#v} && VER_NODEJS_RE=$(printf '%s' "$VER_NODEJS_RE" | sed 's/[.]/\\./g') \
        && local VER_NODEJS=$(echo "${VERS_NODEJS}" | grep -m1 -E "^${VER_NODEJS_RE}([.-]|$)")
      else
           local VER_NODEJS=$(echo "${VERS_NODEJS}" | head -1)
@@ -177,21 +177,21 @@ setup_node_base() {
   && mv /opt/node* /opt/node \
   && ln -sf /opt/node/bin/n* /usr/bin/ \
   && echo 'export PATH=${PATH}:/opt/node/bin' | sudo tee -a /etc/profile.d/path-node.sh \
-  && source /etc/profile.d/path-node.sh \
+  && . /etc/profile.d/path-node.sh \
   && npm install -g npm ;
   # cd /tmp && corepack enable && yarn set version stable && echo "@ Version of Yarn: $(yarn -v)"
-  type node && echo "@ Version of Node and node: $(node -v)" || return -1 ;
-  type npm  && echo "@ Version of Node and npm:  $(npm -v)"  || return -1 ;
+  type node && echo "@ Version of Node and node: $(node -v)" || return 1 ;
+  type npm  && echo "@ Version of Node and npm:  $(npm -v)"  || return 1 ;
 }
 
 setup_node_pnpm() {
   local VER_PNPM_REQ="${1:-}" UNAME ARCH URL_PNPM TMPDIR ;
      UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && ARCH=$(uname -m | sed -e 's/x86_64/x64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') \
-  && local VERS_PNPM=$(curl -fsSL "https://api.github.com/repos/pnpm/pnpm/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v alpha | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_PNPM=$(curl -fsSL "https://api.github.com/repos/pnpm/pnpm/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(alpha|beta|rc)' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_PNPM_REQ}" ]; then
        local VER_PNPM_RE=${VER_PNPM_REQ#v} \
-       && VER_PNPM_RE=${VER_PNPM_RE//./\\.} \
+       && VER_PNPM_RE=$(printf '%s' "$VER_PNPM_RE" | sed 's/[.]/\\./g') \
        && local VER_PNPM=$(echo "${VERS_PNPM}" | grep -m1 -E "^${VER_PNPM_RE}([.-]|$)")
      else
        local VER_PNPM=$(echo "${VERS_PNPM}" | head -1)
@@ -221,7 +221,7 @@ setup_node_bun() {
   && local VERS_BUN=$(curl -sL "https://api.github.com/repos/oven-sh/bun/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po 'bun-v\K\d+\.\d+\.\d+' | sort -rV) \
   && if [ -n "${VER_BUN_REQ}" ]; then
        local VER_BUN_RE=${VER_BUN_REQ#v} \
-       && VER_BUN_RE=${VER_BUN_RE//./\\.} \
+       && VER_BUN_RE=$(printf '%s' "$VER_BUN_RE" | sed 's/[.]/\\./g') \
        && local VER_BUN=$(echo "${VERS_BUN}" | grep -m1 -E "^${VER_BUN_RE}([.-]|$)")
      else
        local VER_BUN=$(echo "${VERS_BUN}" | head -1)
@@ -233,7 +233,7 @@ setup_node_bun() {
   && sudo mv /opt/bun-* /opt/bun \
   && sudo ln -sf /opt/bun/bun /usr/bin/ \
   && echo 'export PATH="${PATH}:/opt/bun"' | sudo tee -a /etc/profile.d/path-bun.sh \
-  && source /etc/profile.d/path-bun.sh ;
+  && . /etc/profile.d/path-bun.sh ;
   type bun && echo "@ Version of bun: $(bun -v)" || return $? ;
 }
 
@@ -246,7 +246,7 @@ setup_GO() {
   && { [ -n "${VERS_GO}" ] || VERS_GO=$(curl -sL "https://go.dev/dl/?mode=json" | grep -Po '(?<="version": "go)\d[\d.]+' | sort -rV) ; } \
   && if [ -n "${VER_GO_REQ}" ]; then
        local VER_GO_RE=${VER_GO_REQ#v} \
-       && VER_GO_RE=${VER_GO_RE//./\\.} \
+       && VER_GO_RE=$(printf '%s' "$VER_GO_RE" | sed 's/[.]/\\./g') \
        && local VER_GO=$(echo "${VERS_GO}" | grep -m1 -E "^${VER_GO_RE}([.-]|$)")
      else
        local VER_GO=$(echo "${VERS_GO}" | head -1)
@@ -260,8 +260,8 @@ setup_GO() {
   && echo 'export GOBIN="$GOROOT/bin"'    | sudo tee -a /etc/profile.d/path-go.sh \
   && echo 'export GOPATH="$GOROOT/path"'  | sudo tee -a /etc/profile.d/path-go.sh \
   && echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' | sudo tee -a /etc/profile.d/path-go.sh \
-  && source /etc/profile.d/path-go.sh ;
-  type go && echo "@ Version of golang: $(go version)" || return -1 ;
+  && . /etc/profile.d/path-go.sh ;
+  type go && echo "@ Version of golang: $(go version)" || return 1 ;
 }
 
 
@@ -273,9 +273,9 @@ setup_rust() {
      echo 'export CARGO_HOME="/opt/cargo"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export RUSTUP_HOME="/opt/rust"'     | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
   && echo 'export PATH="$PATH:/opt/cargo/bin"' | sudo tee -a /etc/profile.d/path-rust.sh > /dev/null \
-  && source /etc/profile.d/path-rust.sh ;
-  type rustup && echo "@ Version of rustup: $(rustup --version)" || return -1 ;
-  type rustc  && echo "@ Version of rustc:  $(rustc  --version)" || return -1 ;
+  && . /etc/profile.d/path-rust.sh ;
+  type rustup && echo "@ Version of rustup: $(rustup --version)" || return 1 ;
+  type rustc  && echo "@ Version of rustc:  $(rustc  --version)" || return 1 ;
 }
 
 
@@ -288,7 +288,7 @@ setup_R_base() {
   && R -e "install.packages(c('devtools'),clean=T,quiet=T);" \
   && R -e "install.packages(c('devtools'),clean=T,quiet=F);" \
   && ( type java && type R && R CMD javareconf || true ) ;
-  type R && echo "@ Version of R: $(R --version)" || return -1 ;
+  type R && echo "@ Version of R: $(R --version)" || return 1 ;
 }
 
 
@@ -300,7 +300,7 @@ setup_julia() {
   && local VERS_JULIA=$(curl -sL "https://api.github.com/repos/JuliaLang/julia/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -P -v '(rc|alpha|beta)' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_JULIA_REQ}" ]; then
        local VER_JULIA_RE=${VER_JULIA_REQ#v} \
-       && VER_JULIA_RE=${VER_JULIA_RE//./\\.} \
+       && VER_JULIA_RE=$(printf '%s' "$VER_JULIA_RE" | sed 's/[.]/\\./g') \
        && local VER_JULIA=$(echo "${VERS_JULIA}" | grep -m1 -E "^${VER_JULIA_RE}([.-]|$)")
      else
        local VER_JULIA=$(echo "${VERS_JULIA}" | head -1)
@@ -315,39 +315,40 @@ setup_julia() {
   && sudo mkdir -pv /opt/julia/pkg \
   && echo "import Libdl; push!(Libdl.DL_LOAD_PATH, \"/opt/conda/lib\")" | sudo tee -a /opt/julia/etc/julia/startup.jl \
   && echo "DEPOT_PATH[1]=\"/opt/julia/pkg\""                            | sudo tee -a /opt/julia/etc/julia/startup.jl ;
-  type julia && echo "@ Version of Julia: $(julia --version)" || return -1 ;
+  type julia && echo "@ Version of Julia: $(julia --version)" || return 1 ;
 }
 
 
 setup_lua_base() {
-    local VER_LUA_REQ="${1:-}" \
- && local VERS_LUA=$(curl -sL https://www.lua.org/download.html | grep "cd lua" | grep -Po '(\d[\d|.]+)' | sort -rV) \
- && if [ -n "${VER_LUA_REQ}" ]; then
-      local VER_LUA_RE=${VER_LUA_REQ#v} \
-      && VER_LUA_RE=${VER_LUA_RE//./\\.} \
-      && local VER_LUA=$(echo "${VERS_LUA}" | grep -m1 -E "^${VER_LUA_RE}([.-]|$)")
-    else
-      local VER_LUA=$(echo "${VERS_LUA}" | head -1)
-    fi \
- && [ -n "${VER_LUA}" ] \
- && local URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
- && echo "Downloading LUA ${VER_LUA} from ${URL_LUA}" \
- && install_tar_gz $URL_LUA \
- && sudo mv /opt/lua-* /tmp/lua && cd /tmp/lua \
- && sudo make linux test && sudo make install INSTALL_TOP=${LUA_HOME:-"/opt/lua"} \
- && sudo ln -sf ${LUA_HOME:-"/opt/lua"}/bin/lua* /usr/bin/ \
- && rm -rf /tmp/lua ;
- type lua && echo "@ Version of LUA installed: $(lua -v)" || return -1 ;
+     VER_LUA_REQ="${1:-}" \
+  && VER_LUA_REQ="${VER_LUA_REQ#v}" \
+  && LUA_HOME="${LUA_HOME:-/opt/lua}" \
+  && VERS_JSON=$(curl -fsSL "https://api.github.com/repos/lua/lua/releases?per_page=50") \
+  && VERS_LUA=$(printf '%s\n' "$VERS_JSON" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\([0-9][0-9.]*\)".*/\1/p') \
+  && if [ -n "$VER_LUA_REQ" ]; then
+       VER_LUA=$(printf '%s\n' "$VERS_LUA" | grep -F -x "$VER_LUA_REQ" | sed -n '1p')
+       [ -n "$VER_LUA" ] || { echo "Lua version not found: $VER_LUA_REQ" >&2; exit 1; }
+     else
+       VER_LUA=$(printf '%s\n' "$VERS_LUA" | sed -n '1p')
+     fi \
+  && { [ -n "$VER_LUA" ] || { echo "No Lua release found" >&2; exit 1; }; } \
+  && URL_LUA="https://www.lua.org/ftp/lua-${VER_LUA}.tar.gz" \
+  && echo "Downloading Lua ${VER_LUA} from ${URL_LUA}" \
+  && install_tar_gz "$URL_LUA" \
+  && (cd "/opt/lua-${VER_LUA}" && make linux test && sudo make install "INSTALL_TOP=$LUA_HOME") \
+  && sudo ln -sf "$LUA_HOME"/bin/lua* /usr/bin/ \
+  && sudo rm -rf "/opt/lua-${VER_LUA}" || exit 1 ;
+  type lua && echo "@ Version of Lua installed: $(lua -v)" || exit 1;
 }
 
 setup_lua_rocks() {
  ## https://github.com/luarocks/luarocks/wiki/Installation-instructions-for-Unix
     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
  && local VER_LUA_ROCKS_REQ="${1:-}" \
- && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -Po '\d+\.\d+(\.\d+)?' | sort -rV) \
+ && local VERS_LUA_ROCKS=$(curl -sL https://luarocks.github.io/luarocks/releases/ | grep "${UNAME}" | grep -viE '(alpha|beta|rc)' | grep -Po '\d+\.\d+(\.\d+)?' | sort -rV) \
  && if [ -n "${VER_LUA_ROCKS_REQ}" ]; then
       local VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_REQ#v} \
-      && VER_LUA_ROCKS_RE=${VER_LUA_ROCKS_RE//./\\.} \
+      && VER_LUA_ROCKS_RE=$(printf '%s' "$VER_LUA_ROCKS_RE" | sed 's/[.]/\\./g') \
       && local VER_LUA_ROCKS=$(echo "${VERS_LUA_ROCKS}" | grep -m1 -E "^${VER_LUA_ROCKS_RE}([.-]|$)")
     else
       local VER_LUA_ROCKS=$(echo "${VERS_LUA_ROCKS}" | head -1)
@@ -360,7 +361,7 @@ setup_lua_rocks() {
  && sudo ./configure --prefix=${LUA_HOME:-"/opt/lua"} --with-lua-include=${LUA_HOME:-"/opt/lua"}/include && sudo make install \
  && sudo ln -sf /opt/lua/bin/lua* /usr/bin/ \
  && rm -rf /tmp/luarocks ;
- type luarocks && echo "@ Version of luarocks: $(luarocks --version)" || return -1 ;
+ type luarocks && echo "@ Version of luarocks: $(luarocks --version)" || return 1 ;
 }
 
 
@@ -368,10 +369,10 @@ setup_bazel() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/aarch64/arm64/') \
   && local VER_BAZEL_REQ="${1:-}" \
-  && local VERS_BAZEL=$(curl -sL "https://api.github.com/repos/bazelbuild/bazel/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_BAZEL=$(curl -sL "https://api.github.com/repos/bazelbuild/bazel/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_BAZEL_REQ}" ]; then
        local VER_BAZEL_RE=${VER_BAZEL_REQ#v} \
-       && VER_BAZEL_RE=${VER_BAZEL_RE//./\\.} \
+       && VER_BAZEL_RE=$(printf '%s' "$VER_BAZEL_RE" | sed 's/[.]/\\./g') \
        && local VER_BAZEL=$(echo "${VERS_BAZEL}" | grep -m1 -E "^${VER_BAZEL_RE}([.-]|$)")
      else
        local VER_BAZEL=$(echo "${VERS_BAZEL}" | head -1)
@@ -380,16 +381,16 @@ setup_bazel() {
   && local URL_BAZEL="https://github.com/bazelbuild/bazel/releases/download/${VER_BAZEL}/bazel-${VER_BAZEL}-installer-${UNAME}-${ARCH}.sh" \
   && curl -o /tmp/bazel.sh -sL "${URL_BAZEL}" && chmod +x /tmp/bazel.sh \
   && /tmp/bazel.sh && rm /tmp/bazel.sh ;
-  type bazel && echo "@ Version of bazel: $(bazel --version)" || return -1 ;
+  type bazel && echo "@ Version of bazel: $(bazel --version)" || return 1 ;
 }
 
 
 setup_gradle() {
      local VER_GRADLE_REQ="${1:-}" \
-  && local VERS_GRADLE=$(curl -sL "https://api.github.com/repos/gradle/gradle/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'M' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_GRADLE=$(curl -sL "https://api.github.com/repos/gradle/gradle/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -v 'M' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_GRADLE_REQ}" ]; then
        local VER_GRADLE_RE=${VER_GRADLE_REQ#v} \
-       && VER_GRADLE_RE=${VER_GRADLE_RE//./\\.} \
+       && VER_GRADLE_RE=$(printf '%s' "$VER_GRADLE_RE" | sed 's/[.]/\\./g') \
        && local VER_GRADLE=$(echo "${VERS_GRADLE}" | grep -m1 -E "^${VER_GRADLE_RE}([.-]|$)")
      else
        local VER_GRADLE=$(echo "${VERS_GRADLE}" | head -1)
@@ -398,17 +399,17 @@ setup_gradle() {
   && local URL_GRADLE="https://downloads.gradle.org/distributions/gradle-${VER_GRADLE}-bin.zip" \
   && mv /opt/gradle* /opt/gradle \
   && ln -sf /opt/gradle/bin/gradle /usr/bin ;
-  type gradle && echo "@ Version of gradle: $(gradle --version)" || return -1 ;
+  type gradle && echo "@ Version of gradle: $(gradle --version)" || return 1 ;
 }
 
 
 setup_yq() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/' -e 's/armv7l/arm/') ;
-  [[ "$ARCH" =~ ^(amd64|arm64|arm)$ ]] || { echo "Unsupported architecture for yq: $(uname -m)"; return 1; }
+  case "$ARCH" in amd64|arm64|arm) ;; *) echo "Unsupported architecture for yq: $(uname -m)"; return 1 ;; esac
      local VER_YQ="" VER_YQ_REQ="${1:-}" \
   && local VERS_YQ=$(curl -sL "https://api.github.com/repos/mikefarah/yq/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po 'v\K[\d.]+' | sort -rV) \
   && if [ -n "${VER_YQ_REQ}" ]; then
-       local VER_YQ_RE=${VER_YQ_REQ#v} && VER_YQ_RE=${VER_YQ_RE//./\\.} \
+       local VER_YQ_RE=${VER_YQ_REQ#v} && VER_YQ_RE=$(printf '%s' "$VER_YQ_RE" | sed 's/[.]/\\./g') \
        && VER_YQ=$(echo "${VERS_YQ}" | grep -m1 -E "^${VER_YQ_RE}([.-]|$)")
      else
        VER_YQ=$(echo "${VERS_YQ}" | head -1)

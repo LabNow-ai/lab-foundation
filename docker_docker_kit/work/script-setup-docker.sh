@@ -1,4 +1,4 @@
-source /opt/utils/script-utils.sh
+. /opt/utils/script-utils.sh
 
 
 setup_docker_compose() {
@@ -8,8 +8,7 @@ setup_docker_compose() {
   && echo "Downloading Compose from: ${URL_COMPOSE}" \
   && sudo curl -o /usr/bin/docker-compose -sL ${URL_COMPOSE} \
   && sudo chmod +x /usr/bin/docker-compose ;
-  
-  type docker-compose && echo "@ Version of docker-compose: $(docker-compose --version)" || return -1 ;
+  type docker-compose && echo "@ Version of docker-compose: $(docker-compose --version)" || return 1 ;
 }
 
 setup_docker_syncer() {
@@ -22,6 +21,5 @@ setup_docker_syncer() {
   && sudo chmod +x /tmp/image_syncer/image-syncer \
   && sudo mv /tmp/image_syncer/image-syncer /usr/bin/ \
   && rm -rf /tmp/image_syncer* ;
-  
-  type image-syncer && echo "@ image-syncer installed to: $(which image-syncer)" || return -1 ;
+  type image-syncer && echo "@ image-syncer installed to: $(which image-syncer)" || return 1 ;
 }
