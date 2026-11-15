@@ -2,9 +2,9 @@
 
 
 setup_tini() {
-     ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
+     local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_TINI_REQ="${1:-}" \
-  && local VERS_TINI=$(curl -sL "https://api.github.com/repos/krallin/tini/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_TINI=$(curl_fsSL "https://api.github.com/repos/krallin/tini/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TINI_REQ}" ]; then
        local VER_TINI_RE=${VER_TINI_REQ#v} \
        && VER_TINI_RE=$(printf '%s' "$VER_TINI_RE" | sed 's/[.]/\\./g') \
@@ -13,9 +13,9 @@ setup_tini() {
        local VER_TINI=$(echo "${VERS_TINI}" | head -1)
      fi \
   && [ -n "${VER_TINI}" ] \
-  && URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
+  && local URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
   && echo "Downloading Tini ${VER_TINI} from ${URL_TINI}" \
-  && curl -o /usr/bin/tini -sL $URL_TINI && chmod +x /usr/bin/tini ;
+  && sudo curl -fsSL -o /usr/bin/tini "$URL_TINI" && sudo chmod +x /usr/bin/tini ;
   type tini && echo "@ Version of tini: $(tini --version)" || return 1 ;
   # ref: https://cloud-atlas.readthedocs.io/zh-cn/latest/docker/init/docker_tini.html
   # to run multi-proces with tini: use a bash script ends with the following code
@@ -24,10 +24,10 @@ setup_tini() {
 
 
 setup_supervisord() {
-     UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
-  && ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
+     local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
+  && local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_SUPERVISORD_REQ="${1:-}" \
-  && local VERS_SUPERVISORD=$(curl -sL "https://api.github.com/repos/LabNow-ai/supervisord/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && local VERS_SUPERVISORD=$(curl_fsSL "https://api.github.com/repos/LabNow-ai/supervisord/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_SUPERVISORD_REQ}" ]; then
           local VER_SUPERVISORD_RE=${VER_SUPERVISORD_REQ#v} \
        && VER_SUPERVISORD_RE=$(printf '%s' "$VER_SUPERVISORD_RE" | sed 's/[.]/\\./g') \
@@ -36,19 +36,19 @@ setup_supervisord() {
           local VER_SUPERVISORD=$(echo "${VERS_SUPERVISORD}" | head -1)
      fi \
   && [ -n "${VER_SUPERVISORD}" ] \
-  && URL_SUPERVISORD="https://github.com/LabNow-ai/supervisord/releases/download/v${VER_SUPERVISORD}/supervisord_${VER_SUPERVISORD}_${UNAME}_${ARCH}.tar.gz" \
+  && local URL_SUPERVISORD="https://github.com/LabNow-ai/supervisord/releases/download/v${VER_SUPERVISORD}/supervisord_${VER_SUPERVISORD}_${UNAME}_${ARCH}.tar.gz" \
   && echo "Downloading Supervisord ${VER_SUPERVISORD} from ${URL_SUPERVISORD}" \
-  && curl -o /tmp/TMP.tgz -sL $URL_SUPERVISORD && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
-  && mkdir -pv /opt/bin/ && mv /tmp/supervisord /opt/bin/ && ln -sf /opt/bin/supervisord /usr/local/bin/ ;
+  && curl_fsSL -o /tmp/TMP.tgz "$URL_SUPERVISORD" && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
+  && sudo mkdir -pv /opt/bin/ && sudo mv /tmp/supervisord /opt/bin/ && sudo ln -sf /opt/bin/supervisord /usr/local/bin/ ;
   type supervisord && echo "@ Version of supervisord: $(supervisord version)" || return 1 ;
 }
 
 
 setup_systemd() {
-    apt-get -qq update -yq --fix-missing \
- && apt-get -qq install -yq --no-install-recommends systemd systemd-cron \
- && rm -f /lib/systemd/system/systemd*udev* \
- && rm -f /lib/systemd/system/getty.target
+    sudo apt-get -qq update -yq --fix-missing \
+ && sudo apt-get -qq install -yq --no-install-recommends systemd systemd-cron \
+ && sudo rm -f /lib/systemd/system/systemd*udev* \
+ && sudo rm -f /lib/systemd/system/getty.target
  # ref: https://cloud-atlas.readthedocs.io/zh_CN/latest/docker/init/docker_systemd.html
  # ENTRYPOINT [ "/usr/lib/systemd/systemd" ]
  # CMD [ "log-level=info", "unit=sysinit.target" ]

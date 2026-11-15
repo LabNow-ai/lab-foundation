@@ -3,6 +3,7 @@ export DISTRO_CODE_NAME=$(lsb_release -cs)
 
 APT_KEYRING_DIR="/etc/apt/keyrings"
 APT_SOURCE_DIR="/etc/apt/sources.list.d"
+sudo mkdir -p "$APT_KEYRING_DIR" "$APT_SOURCE_DIR"
 
 add_apt_source() {
   local key_url="$1"
@@ -12,8 +13,8 @@ add_apt_source() {
   local keyring_path="${APT_KEYRING_DIR}/${keyring_name}"
   local list_path="${APT_SOURCE_DIR}/${list_name}"
 
-  curl -fsSL "$key_url" | gpg --dearmor > "$keyring_path"
-  curl -fsSL "$list_url" > "$list_path"
+  curl_fsSL "$key_url" | gpg --dearmor | sudo tee "$keyring_path" >/dev/null
+  curl_fsSL "$list_url" | sudo tee "$list_path" >/dev/null
 }
 
 
