@@ -214,7 +214,7 @@ setup_node_pnpm() {
      else
        URL_PNPM="https://github.com/pnpm/pnpm/releases/download/v${VER_PNPM}/pnpm-${UNAME}-${ARCH}" \
        && echo "@ Installing pnpm v${VER_PNPM} from: ${URL_PNPM}" \
-       && sudo curl_fsSL -o /opt/node/bin/pnpm "${URL_PNPM}" ;
+       && sudo curl -fsSL -o /opt/node/bin/pnpm "${URL_PNPM}" ;
      fi \
   && sudo chmod +x /opt/node/bin/pnpm && sudo ln -sf /opt/node/bin/pnpm /usr/local/bin/pnpm \
   && echo 'export PNPM_STORE_DIR=/opt/node/pnpm-store' | sudo tee /etc/profile.d/path-pnpm.sh >/dev/null ;

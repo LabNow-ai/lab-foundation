@@ -6,11 +6,11 @@ setup_docker_compose() {
   && local VER_COMPOSE=$(curl_fsSL "https://api.github.com/repos/docker/compose/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+') \
   && local URL_COMPOSE="https://github.com/docker/compose/releases/download/v${VER_COMPOSE}/docker-compose-linux-${ARCH}" \
   && echo "Downloading Compose from: ${URL_COMPOSE}" \
-  && sudo curl_fsSL -o /usr/bin/docker-compose "${URL_COMPOSE}" \
+  && sudo curl -fsSL -o /usr/bin/docker-compose "${URL_COMPOSE}" \
   && sudo chmod +x /usr/bin/docker-compose ;
   type docker-compose && echo "@ Version of docker-compose: $(docker-compose --version)" || return 1 ;
 }
-
+  
 setup_docker_syncer() {
      local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_SYNCER="$(curl_fsSL "https://api.github.com/repos/AliyunContainerService/image-syncer/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[.\d]+')" \

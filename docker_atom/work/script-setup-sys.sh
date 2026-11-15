@@ -15,7 +15,7 @@ setup_tini() {
   && [ -n "${VER_TINI}" ] \
   && local URL_TINI="https://github.com/krallin/tini/releases/download/v${VER_TINI}/tini-${ARCH}" \
   && echo "Downloading Tini ${VER_TINI} from ${URL_TINI}" \
-  && sudo curl_fsSL -o /usr/bin/tini "$URL_TINI" && sudo chmod +x /usr/bin/tini ;
+  && sudo curl -fsSL -o /usr/bin/tini "$URL_TINI" && sudo chmod +x /usr/bin/tini ;
   type tini && echo "@ Version of tini: $(tini --version)" || return 1 ;
   # ref: https://cloud-atlas.readthedocs.io/zh-cn/latest/docker/init/docker_tini.html
   # to run multi-proces with tini: use a bash script ends with the following code
