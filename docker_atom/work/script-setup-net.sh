@@ -1,7 +1,9 @@
+. /opt/utils/script-utils.sh
+
 setup_traefik() {
      local ARCH=$(dpkg --print-architecture) \
   && local VER_TRAEFIK_REQ="${1:-}" \
-  && local VERS_TRAEFIK=$(curl -sL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
+  && local VERS_TRAEFIK=$(curl_fsSL "https://api.github.com/repos/traefik/traefik/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -vi 'rc' | grep -Po '\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_TRAEFIK_REQ}" ]; then
        local VER_TRAEFIK_RE=${VER_TRAEFIK_REQ#v} \
        && VER_TRAEFIK_RE=$(printf '%s' "$VER_TRAEFIK_RE" | sed 's/[.]/\\./g') \
@@ -11,7 +13,7 @@ setup_traefik() {
      fi \
   && [ -n "${VER_TRAEFIK}" ] \
   && local URL_TRAEFIK="https://github.com/traefik/traefik/releases/download/v${VER_TRAEFIK}/traefik_v${VER_TRAEFIK}_linux_${ARCH}.tar.gz" \
-  && curl -o /tmp/TMP.tgz -sL "${URL_TRAEFIK}" \
+  && curl_fsSL -o /tmp/TMP.tgz "${URL_TRAEFIK}" \
   && sudo mkdir -pv /opt/bin && sudo tar -C /opt/bin -xzf /tmp/TMP.tgz traefik && rm /tmp/TMP.tgz \
   && sudo chmod +x /opt/bin/traefik && sudo ln -sf /opt/bin/traefik /usr/bin/ ;
   type traefik && echo "@ Version of traefik: $(traefik version)" || return 1 ;
@@ -21,7 +23,7 @@ setup_caddy() {
      local UNAME=$(uname | tr '[:upper:]' '[:lower:]') \
   && local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_CADDY_REQ="${1:-}" \
-  && local VERS_CADDY=$(curl -sL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(beta|rc)' | grep -Po '(\d[\d|.]+)' | sort -rV) \
+  && local VERS_CADDY=$(curl_fsSL "https://api.github.com/repos/caddyserver/caddy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -viE '(beta|rc)' | grep -Po '(\d[\d|.]+)' | sort -rV) \
   && if [ -n "${VER_CADDY_REQ}" ]; then
        local VER_CADDY_RE=${VER_CADDY_REQ#v} \
        && VER_CADDY_RE=$(printf '%s' "$VER_CADDY_RE" | sed 's/[.]/\\./g') \
@@ -32,7 +34,7 @@ setup_caddy() {
   && [ -n "${VER_CADDY}" ] \
   && local URL_CADDY="https://github.com/caddyserver/caddy/releases/download/v${VER_CADDY}/caddy_${VER_CADDY}_${UNAME}_${ARCH}.tar.gz" \
   && echo "Downloading Caddy ${VER_CADDY} from ${URL_CADDY}" \
-  && curl -o /tmp/TMP.tgz -sL "${URL_CADDY}" && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
+  && curl_fsSL -o /tmp/TMP.tgz "${URL_CADDY}" && tar -C /tmp/ -xzf /tmp/TMP.tgz && rm /tmp/TMP.tgz \
   && sudo mkdir -pv /opt/bin/ && sudo mv /tmp/caddy /opt/bin/ && sudo ln -sf /opt/bin/caddy /usr/local/bin/ ;
   type caddy && echo "@ Version of caddy: $(caddy version)" || return 1 ;
 }
@@ -42,7 +44,7 @@ setup_oauth2_proxy() {
   case "$ARCH" in amd64|arm64|armv7) ;; *) echo "Unsupported architecture for oauth2-proxy: $(uname -m)"; return 1 ;; esac
 
      local VER_OAUTH2_PROXY_REQ="${1:-}" \
-  && local VERS_OAUTH2_PROXY=$(curl -sL "https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(?<=v)?\d[\d.]+' | sort -rV) \
+  && local VERS_OAUTH2_PROXY=$(curl_fsSL "https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | grep -Po '(?<=v)?\d[\d.]+' | sort -rV) \
   && if [ -n "${VER_OAUTH2_PROXY_REQ}" ]; then
        local VER_OAUTH2_PROXY_RE=${VER_OAUTH2_PROXY_REQ#v} \
        && VER_OAUTH2_PROXY_RE=$(printf '%s' "$VER_OAUTH2_PROXY_RE" | sed 's/[.]/\\./g') \
@@ -54,7 +56,7 @@ setup_oauth2_proxy() {
   && local FILE_OAUTH2_PROXY="oauth2-proxy-v${VER_OAUTH2_PROXY}.linux-${ARCH}.tar.gz" \
   && local URL_OAUTH2_PROXY="https://github.com/oauth2-proxy/oauth2-proxy/releases/download/v${VER_OAUTH2_PROXY}/${FILE_OAUTH2_PROXY}" \
   && echo "Installing oauth2-proxy v${VER_OAUTH2_PROXY} for arch ${ARCH} from: ${URL_OAUTH2_PROXY}" \
-  && curl -fSL "${URL_OAUTH2_PROXY}" -o /tmp/oauth2-proxy.tar.gz \
+  && curl_fsSL -o /tmp/oauth2-proxy.tar.gz "${URL_OAUTH2_PROXY}" \
   && tar -xzf /tmp/oauth2-proxy.tar.gz -C /tmp \
   && sudo install -m 0755 -D "/tmp/oauth2-proxy-v${VER_OAUTH2_PROXY}.linux-${ARCH}/oauth2-proxy" /opt/bin/oauth2-proxy \
   && sudo ln -sf /opt/bin/oauth2-proxy /usr/bin/oauth2-proxy \

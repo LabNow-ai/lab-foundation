@@ -26,16 +26,16 @@ install_julia()   { julia -e "import Pkg; l=filter(x->length(x)>0, [split(i,r\"%
 install_octave()  { cut -d "%" -f 1 "$1" | sed '/^$/d' | xargs -r -n1 -I {} sh -c 'octave --eval "pkg install -forge {}"' ; }
 
 # function to download a ZIP file and unzip it to /opt/
-install_zip()     { curl -o /tmp/TMP.zip -sL "$1" && sudo unzip -q -d /opt/ /tmp/TMP.zip && rm /tmp/TMP.zip ; }
+install_zip()     { curl -fsSL -o /tmp/TMP.zip "$1" && sudo unzip -q -d /opt/ /tmp/TMP.zip && rm /tmp/TMP.zip ; }
 
 # function to download a .tar.gz file and unzip it to /opt/, add a second argument to extract only those file
-install_tar_gz()  { curl -o /tmp/TMP.tgz -sL "$1" && sudo tar -C /opt/ -xzf /tmp/TMP.tgz ${2:-} && rm /tmp/TMP.tgz ; }
+install_tar_gz()  { curl -fsSL -o /tmp/TMP.tgz "$1" && sudo tar -C /opt/ -xzf /tmp/TMP.tgz ${2:-} && rm /tmp/TMP.tgz ; }
 
 # function to download a .tar.bz file and unzip it to /opt/, add a second argument to extract only those file
-install_tar_bz()  { curl -o /tmp/TMP.tbz -sL "$1" && sudo tar -C /opt/ -xjf /tmp/TMP.tbz ${2:-} && rm /tmp/TMP.tbz ; }
+install_tar_bz()  { curl -fsSL -o /tmp/TMP.tbz "$1" && sudo tar -C /opt/ -xjf /tmp/TMP.tbz ${2:-} && rm /tmp/TMP.tbz ; }
 
 # function to download a .tar.xz file and unzip it to /opt/, add a second argument to extract only those file
-install_tar_xz()  { curl -o /tmp/TMP.txz -sL "$1" && sudo tar -C /opt/ -xJf /tmp/TMP.txz ${2:-} && rm /tmp/TMP.txz ; }
+install_tar_xz()  { curl -fsSL -o /tmp/TMP.txz "$1" && sudo tar -C /opt/ -xJf /tmp/TMP.txz ${2:-} && rm /tmp/TMP.txz ; }
 
 # function to install java packages from a text file which lists JAR file maven full names (add comments with % char)
 install_mvn() { cut -d "%" -f 1 "$1" | xargs -r -n1 -I {} mvn dependency:copy -DlocalRepositoryDirectory="/tmp/m2repo" -Djavax.net.ssl.trustStorePassword=changeit -Dartifact="{}" -DoutputDirectory="${2:-}" ; }
@@ -64,8 +64,8 @@ list_installed_packages() {
   type conda  && echo "@ Version of Conda and packages:"  && conda info && conda list | grep -v "<pip>"
   type mamba  && echo "@ Version of Mamba and packages:"  && mamba info && mamba list | grep -v "<pip>"
   type node   && echo "@ Version of NodeJS and packages:" && node --version && npm --version && npm list -g --depth 0
-  type java   && echo "@ Version of Java (JRE):"   && java  -version
-  type javac  && echo "@ Version of Java (JDK):"   && javac -version
+  type java   && echo "@ Version of Java (JRE):"          && java  -version
+  type javac  && echo "@ Version of Java (JDK):"          && javac -version
   type R      && echo "@ Version of R and libraries:"     && R --version && R -e "R.Version()\$version.string;installed.packages()[,c(3,10)]"
   type julia  && echo "@ Version of Julia and packages"   && julia --version && julia -e "using Pkg; for(k,v) in Pkg.dependencies(); println(v.name,\"==\",v.version); end"
   type go     && echo "@ Version of golang and packages:" && go version && go list ...
@@ -92,3 +92,5 @@ fix_permission() {
           -exec chmod +6000 -- {} \+;
   done
 }
+
+curl_fsSL() { curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "$@" ; }

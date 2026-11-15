@@ -14,7 +14,7 @@ ENV NVIDIA_DISABLE_REQUIRE=1
 RUN set -eux && echo ${CUDA_VERSION} && nvcc --version \
  # HACK & FIX: for some old version of NVIDIA docker images, sys python version is too old, update debpython
  && URL_PY3_DEP="https://salsa.debian.org/cpython-team/python3-defaults/-/archive/master/python3-defaults-master.zip?path=debpython" \
- && curl -o /tmp/TMP.zip -sL "${URL_PY3_DEP}" && unzip -q -d /tmp/ /tmp/TMP.zip && rm /tmp/TMP.zip \
+ && curl -fsSL -o /tmp/TMP.zip "${URL_PY3_DEP}" && unzip -q -d /tmp/ /tmp/TMP.zip && rm /tmp/TMP.zip \
  && mkdir -pv /usr/share/python3/debpython/ \
  && cp -rf /tmp/python3-defaults-master-debpython/debpython/* /usr/share/python3/debpython/ \
  && rm -rf /tmp/python3-defaults-master-debpython \

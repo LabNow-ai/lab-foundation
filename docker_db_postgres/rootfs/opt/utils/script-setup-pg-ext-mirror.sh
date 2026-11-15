@@ -13,8 +13,8 @@ add_apt_source() {
   local keyring_path="${APT_KEYRING_DIR}/${keyring_name}"
   local list_path="${APT_SOURCE_DIR}/${list_name}"
 
-  curl -fsSL "$key_url" | gpg --dearmor | sudo tee "$keyring_path" >/dev/null
-  curl -fsSL "$list_url" | sudo tee "$list_path" >/dev/null
+  curl_fsSL "$key_url" | gpg --dearmor | sudo tee "$keyring_path" >/dev/null
+  curl_fsSL "$list_url" | sudo tee "$list_path" >/dev/null
 }
 
 

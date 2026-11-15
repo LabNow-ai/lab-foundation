@@ -1,4 +1,4 @@
-if [ ${PG_MAJOR} != "17" ]; then
+if [ "${PG_MAJOR}" -lt 17 ]; then
     # Fix pgagent for PG 15 / 16
     sudo rm -rf /usr/share/postgresql/${PG_MAJOR}/extension/pgagent*
     sudo mv     /usr/share/postgresql/17/extension/pgagent* /usr/share/postgresql/${PG_MAJOR}/extension/
@@ -18,11 +18,11 @@ setup_pg_search() {
  ## ref1: https://docs.paradedb.com/deploy/self-hosted/extension
  ## ref2: https://github.com/paradedb/paradedb
     local ARCH="amd64" \
- && local VER_PG_SEARCH=$(curl -fsSL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": "v)[^"]+' | grep -v -- '-rc' | head -1) \
+ && local VER_PG_SEARCH=$(curl_fsSL "https://api.github.com/repos/paradedb/paradedb/releases?per_page=50" | grep -Po '(?<="tag_name": "v)[^"]+' | grep -v -- '-rc' | head -1) \
  && local URL_PG_SEARCH="https://github.com/paradedb/paradedb/releases/download/v${VER_PG_SEARCH}/postgresql-${PG_MAJOR}-pg-search_${VER_PG_SEARCH}-1PARADEDB-$(lsb_release -cs)_amd64.deb" \
  && echo "Downloading pg_search ${VER_PG_SEARCH} from: ${URL_PG_SEARCH}" \
  && mkdir -pv /tmp/pg_search/ && cd /tmp/pg_search \
- && curl -fsSL -O "${URL_PG_SEARCH}" \
+ && curl_fsSL -O "${URL_PG_SEARCH}" \
  && sudo apt-get -qq install -yq --no-install-recommends libopenblas0 \
  && sudo dpkg -i *.deb
 }
@@ -39,7 +39,7 @@ setup_apache_age() {
 setup_pgvectorscale() {
  ## ref: https://github.com/timescale/pgvectorscale
     local ARCH="amd64" \
- && local VER_PGVS=$(curl -sL "https://api.github.com/repos/timescale/pgvectorscale/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
+ && local VER_PGVS=$(curl_fsSL "https://api.github.com/repos/timescale/pgvectorscale/releases?per_page=50" | grep -Po '(?<="tag_name": ")[^"]+' | head -1 | grep -Po '\d[\d.]+' ) \
  && local URL_PGVS="https://github.com/timescale/pgvectorscale/releases/download/${VER_PGVS}/pgvectorscale-${VER_PGVS}-pg${PG_MAJOR}-${ARCH}.zip" \
  && mkdir -pv /tmp/pgvectorscale/ && cd /tmp/pgvectorscale \
  && install_zip "${URL_PGVS}" && sudo mv /opt/pgvectorscal* /tmp/pgvectorscale/ \
@@ -50,10 +50,10 @@ setup_pgroonga(){
     ## ref1: https://pgroonga.github.io/tutorial/
     ## ref2: https://github.com/pgroonga/docker
     mkdir -pv /tmp/pgroonga && cd /tmp/pgroonga
-    curl -fsSL -O https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
+    curl_fsSL -O https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
  && sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
  && rm apache-arrow-apt-source-latest-$(lsb_release -cs).deb \
- && curl -fsSL -O https://packages.groonga.org/debian/groonga-apt-source-latest-$(lsb_release -cs).deb \
+ && curl_fsSL -O https://packages.groonga.org/debian/groonga-apt-source-latest-$(lsb_release -cs).deb \
  && sudo apt install -y -V ./groonga-apt-source-latest-$(lsb_release -cs).deb \
  && rm groonga-apt-source-latest-$(lsb_release -cs).deb \
  && sudo apt update && sudo apt install -y -V \

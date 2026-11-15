@@ -4,7 +4,7 @@
 setup_postgresql_client() {
   local VER_PG=${1:-"18"}
   # from: https://www.postgresql.org/download/linux/ubuntu/
-  curl "https://www.postgresql.org/media/keys/ACCC4CF8.asc" | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc
+  curl_fsSL "https://www.postgresql.org/media/keys/ACCC4CF8.asc" | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc
   echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
   # will download ~9MB files and use ~55MB disk after installation
   sudo apt-get update && sudo apt-get -y install "postgresql-client-${VER_PG}"
@@ -14,7 +14,7 @@ setup_postgresql_client() {
 setup_duckdb() {
   local ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') \
   && local VER_DUCKDB_REQ="${1:-}" \
-  && local VERS_DUCKDB=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//' | sort -rV) \
+  && local VERS_DUCKDB=$(curl_fsSL https://api.github.com/repos/duckdb/duckdb/releases | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//' | sort -rV) \
   && if [ -n "${VER_DUCKDB_REQ}" ]; then
        local VER_DUCKDB_RE=${VER_DUCKDB_REQ#v} \
        && VER_DUCKDB_RE=$(printf '%s' "$VER_DUCKDB_RE" | sed 's/[.]/\\./g') \
@@ -29,7 +29,7 @@ setup_duckdb() {
   && local URL_DUCKDB="https://github.com/duckdb/duckdb/releases/download/v${VER_DUCKDB}/${FILE_DUCKDB}" \
   && local TMP_FILE="/tmp/duckdb-${VER_DUCKDB}.${EXT_DUCKDB}" \
   && echo "Downloading DuckDB ${VER_DUCKDB} from: ${URL_DUCKDB}" \
-  && curl -L "${URL_DUCKDB}" -o "${TMP_FILE}" \
+  && curl_fsSL -o "${TMP_FILE}" "${URL_DUCKDB}" \
   && if [ "${FILE_DUCKDB##*.}" = zip ]; then unzip -q "${TMP_FILE}" -d /tmp; else tar -xzf "${TMP_FILE}" -C /tmp; fi \
   && sudo mkdir -pv /opt/bin \
   && sudo install -m 0755 /tmp/duckdb /opt/bin/duckdb \
@@ -48,7 +48,7 @@ setup_mongosh_client() {
   local VER_MONGOSH=${1:-"8.0"}
   # from: https://www.mongodb.com/docs/mongodb-shell/install/
   local DISTRO=$(lsb_release -cs)
-  curl -sL https://www.mongodb.org/static/pgp/server-${VER_MONGOSH}.asc | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc
+  curl_fsSL "https://www.mongodb.org/static/pgp/server-${VER_MONGOSH}.asc" | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc
   echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu ${DISTRO}/mongodb-org/${VER_MONGOSH} multiverse" | sudo tee "/etc/apt/sources.list.d/mongodb-org-${VER_MONGOSH}.list" >/dev/null
   # will download ~38MB files and use ~218MB disk after installation
   sudo apt-get update && sudo apt-get -y install mongodb-mongosh
@@ -58,7 +58,7 @@ setup_mongosh_client() {
 
 setup_redis_client() {
   # from https://redis.io/docs/getting-started/installation/install-redis-on-linux/
-  curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+  curl_fsSL "https://packages.redis.io/gpg" | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
   echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
   sudo apt-get update && sudo apt-get -y install redis-tools
   type redis-cli && echo "@ Version of redis-cli: $(redis-cli --version)" || return 1
@@ -80,7 +80,7 @@ setup_oracle_client() {
   PAGE="https://www.oracle.com/database/technologies/instant-client/linux-${OARCH}-downloads.html"
   echo "Finding download URL for Oracle client ${PKG_ARCH}: ${PAGE}"
 
-  DL=$(curl -s "$PAGE" \
+  DL=$(curl_fsSL "$PAGE" \
     | grep -oP "//download.oracle.com/otn_software/linux/instantclient/[0-9]+/instantclient-basic-linux\.${PKG_ARCH}-[0-9.]+\.zip" \
     | head -n1)
 
@@ -93,7 +93,7 @@ setup_oracle_client() {
   local ZIP="instantclient-basic-linux.${PKG_ARCH}-${VER}.zip"
   local URL="https://download.oracle.com/otn_software/linux/instantclient/${BUILD}/${ZIP}"
   echo "@ Installing Oracle Instant Client ${VER} (${PKG_ARCH} build ${BUILD}): ${URL}"
-  curl -L -o "/tmp/${ZIP}" "$URL"
+  curl_fsSL -L -o "/tmp/${ZIP}" "$URL"
 
   sudo mkdir -pv /opt/oracle
   sudo unzip -o "/tmp/${ZIP}" "instantclient_*/*" -d /opt/oracle
