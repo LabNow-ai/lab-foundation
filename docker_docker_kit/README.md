@@ -26,6 +26,14 @@ docker run --rm \
 Fill the environment variables above, and more details can be found in `./work/script-sync-image.sh`.
 For workflow-based syncs, `IMG_NAMESPACE_SRC` selects the source namespace and `IMG_NAMESPACE_DST` optionally selects a different destination namespace; when omitted, the destination namespace matches the source.
 
+For different destination namespaces per registry, set `DOCKER_MIRROR_TARGETS` to comma-separated `registry=namespace-template` entries:
+
+```shell
+DOCKER_MIRROR_TARGETS='docker.io=%s,registry.cn-hangzhou.aliyuncs.com=%s-oss'
+```
+
+The single `%s` placeholder is replaced with `IMG_NAMESPACE`. In GitHub Actions, the main branch uses the repository owner namespace (for example, `labnow`), while all non-main branches use the fixed `0dev` suffix (for example, `labnow0dev`). The workflow syncs `quay.io/<namespace>/<image>` to each configured target namespace. `DOCKER_MIRROR_TARGETS` takes precedence over the legacy `DOCKER_MIRROR_REGISTRY`; without it, legacy behavior is unchanged. Each destination registry must have matching credentials in the auth file.
+
 ### Sync images in batch
 
 To sync images in batch, two config files (or combine them in one as `--config`) are needed.

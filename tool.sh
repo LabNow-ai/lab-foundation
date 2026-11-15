@@ -13,11 +13,8 @@ else
 fi
 
 
-CI_PROJECT_SPACE=${CI_PROJECT_BRANCH%%/*}
-
-# If on the main branch, image namespace will be same as CI_PROJECT_NAME's name space;
-# else (not main branch), image namespace = {CI_PROJECT_NAME's name space} + "0" + {1st substr before / in CI_PROJECT_SPACE}.
-[ "${CI_PROJECT_BRANCH}" = "main" ] && NAMESPACE_SUFFIX="" || NAMESPACE_SUFFIX="0${CI_PROJECT_SPACE}" ;
+# On main, use the repository owner's namespace; on other branches, append the fixed "0dev" suffix.
+[ "${CI_PROJECT_BRANCH}" = "main" ] && NAMESPACE_SUFFIX="" || NAMESPACE_SUFFIX="0dev" ;
 export CI_PROJECT_NAMESPACE="$(dirname "${CI_PROJECT_NAME}")${NAMESPACE_SUFFIX}" ;
 
 export IMG_NAMESPACE=$(echo "${CI_PROJECT_NAMESPACE}" | awk '{print tolower($0)}')

@@ -9,7 +9,9 @@ Usage: script-sync-image.sh [IMAGE] [options]
   --image-namespace-dst NAME  Destination image namespace (default: source namespace)
   --source-registry NAME      Source registry (default: REGISTRY_URL or docker.io)
   --target-registry NAME      Target registry; repeat or use comma-separated values
-  --image IMAGE               Sync one fully-qualified image path instead of workflow jobs
+  --image IMAGE               Sync one registry-relative source image path
+  DOCKER_MIRROR_TARGETS       Comma-separated registry=namespace-template entries.
+                              A single %s is replaced with IMG_NAMESPACE.
   --help                      Show this help
 EOF
 }
@@ -20,12 +22,15 @@ namespace_img_src=${IMG_NAMESPACE_SRC:-library}
 namespace_img_dst=${IMG_NAMESPACE_DST:-}
 registry_source=${REGISTRY_URL:-docker.io}
 registries_target=${DOCKER_MIRROR_REGISTRY:-}
+mirror_targets=${DOCKER_MIRROR_TARGETS:-}
+target_registry_cli=false
 image_single=
 option_value=
 option_shift=
 
 append_target_registries() {
   registries_target="${registries_target}${registries_target:+,}$1"
+  target_registry_cli=true
 }
 
 read_option_value() {
@@ -84,8 +89,19 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+if [ -n "$mirror_targets" ] && [ "$target_registry_cli" = true ]; then
+  echo "Do not combine DOCKER_MIRROR_TARGETS with --target-registry" >&2
+  exit 2
+fi
+
 if [ -z "$namespace_img_dst" ]; then
   namespace_img_dst=$namespace_img_src
+fi
+namespace_template_value=${IMG_NAMESPACE:-$namespace_img_dst}
+use_target_map=false
+[ -z "$mirror_targets" ] || use_target_map=true
+if [ "$use_target_map" = true ] && [ -n "$registries_target" ]; then
+  echo "DOCKER_MIRROR_TARGETS overrides DOCKER_MIRROR_REGISTRY" >&2
 fi
 
 export SOURCE_REGISTRY=$registry_source
@@ -99,6 +115,8 @@ trap 'exit 1' HUP INT TERM
 file_names=$tmp_dir/names
 file_names_raw=$tmp_dir/raw-names
 file_targets=$tmp_dir/targets
+file_targets_raw=$tmp_dir/raw-targets
+file_target_registries=$tmp_dir/target-registries
 file_config=$tmp_dir/config.json
 
 if [ -n "$image_single" ]; then
@@ -115,10 +133,62 @@ else
   tr ',' '\n' < "$file_names_raw" > "$file_names"
 fi
 
-printf '%s\n' "$registries_target" | tr ',' '\n' |
-  sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' > "$file_targets"
-if [ ! -s "$file_targets" ]; then
-  printf '%s\n' registry.cn-beijing.aliyuncs.com registry.cn-hangzhou.aliyuncs.com > "$file_targets"
+if [ "$use_target_map" = true ]; then
+  printf '%s\n' "$mirror_targets" | tr ',' '\n' |
+    sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' > "$file_targets_raw"
+  if [ ! -s "$file_targets_raw" ]; then
+    echo "DOCKER_MIRROR_TARGETS contains no target mappings" >&2
+    exit 2
+  fi
+  while IFS= read -r target_mapping || [ -n "$target_mapping" ]; do
+    case "$target_mapping" in
+      *=*) registry_target=${target_mapping%%=*}; namespace_template=${target_mapping#*=} ;;
+      *) echo "Invalid target mapping (expected registry=namespace): $target_mapping" >&2; exit 2 ;;
+    esac
+    registry_target=$(printf '%s' "$registry_target" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    namespace_template=$(printf '%s' "$namespace_template" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    case "$registry_target" in
+      ''|*/*|*://*|*[[:space:]]*) echo "Invalid target registry: $registry_target" >&2; exit 2 ;;
+    esac
+    [ -n "$namespace_template" ] || { echo "Target namespace is empty for $registry_target" >&2; exit 2; }
+
+    case "$namespace_template" in
+      *%s*)
+        namespace_template_prefix=${namespace_template%%\%s*}
+        namespace_template_suffix=${namespace_template#*%s}
+        case "$namespace_template_prefix$namespace_template_suffix" in
+          *%*|*[!a-zA-Z0-9._/-]*)
+            echo "Invalid namespace template (use only one %s placeholder): $namespace_template" >&2
+            exit 2
+            ;;
+        esac
+        [ -n "$namespace_template_value" ] || {
+          echo "IMG_NAMESPACE is empty; cannot expand target namespace: $namespace_template" >&2
+          exit 2
+        }
+        target_namespace=$(printf "$namespace_template" "$namespace_template_value")
+        ;;
+      *%*) echo "Unsupported printf placeholder in: $namespace_template" >&2; exit 2 ;;
+      *) target_namespace=$namespace_template ;;
+    esac
+    target_namespace=$(printf '%s' "$target_namespace" | tr '[:upper:]' '[:lower:]')
+    case "$target_namespace" in
+      ''|/*|*/|*//*|*[!a-z0-9._/-]*)
+        echo "Invalid target namespace: $target_namespace" >&2
+        exit 2
+        ;;
+    esac
+    printf '%s\t%s\n' "$registry_target" "$target_namespace" >> "$file_targets"
+  done < "$file_targets_raw"
+else
+  printf '%s\n' "$registries_target" | tr ',' '\n' |
+    sed 's/^[[:space:]]*//; s/[[:space:]]*$//; /^$/d' > "$file_target_registries"
+  if [ ! -s "$file_target_registries" ]; then
+    printf '%s\n' registry.cn-beijing.aliyuncs.com registry.cn-hangzhou.aliyuncs.com > "$file_target_registries"
+  fi
+  while IFS= read -r registry_target || [ -n "$registry_target" ]; do
+    printf '%s\t%s\n' "$registry_target" "$namespace_img_dst" >> "$file_targets"
+  done < "$file_target_registries"
 fi
 
 status_total=0
@@ -127,20 +197,37 @@ run_image_sync() {
   status_total=$((status_total + $?))
 }
 
+image_destination_for_target() {
+  if [ "$use_target_map" = true ]; then
+    printf '%s/%s/%s' "$1" "$2" "$image_path_suffix"
+  else
+    printf '%s/%s' "$1" "$path_image_dst"
+  fi
+}
+
 while IFS= read -r image_name || [ -n "$image_name" ]; do
   path_image_src=$image_name
   path_image_dst=$image_name
+  image_path_suffix=$image_name
   if [ -z "$image_single" ]; then
     path_image_src=$namespace_img_src/$image_name
     path_image_dst=$namespace_img_dst/$image_name
+  elif [ "$use_target_map" = true ]; then
+    case "$image_single" in
+      "$namespace_img_src"/*) image_path_suffix=${image_single#"$namespace_img_src"/} ;;
+      *)
+        echo "With DOCKER_MIRROR_TARGETS, --image must start with source namespace '$namespace_img_src/'" >&2
+        exit 2
+        ;;
+    esac
   fi
   image_source=$registry_source/$path_image_src
   echo "Docker image sync job name found: $path_image_src"
 
   if [ -n "$file_auth" ]; then
     export SOURCE_IMAGE=$image_source TARGET_REGISTRIES=
-    while IFS= read -r registry_target || [ -n "$registry_target" ]; do
-      image_destination=$registry_target/$path_image_dst
+    while IFS="$(printf '\t')" read -r registry_target target_namespace || [ -n "$registry_target" ]; do
+      image_destination=$(image_destination_for_target "$registry_target" "$target_namespace")
       if [ -n "$TARGET_REGISTRIES" ]; then
         TARGET_REGISTRIES=$TARGET_REGISTRIES,$image_destination
       else
@@ -163,8 +250,8 @@ while IFS= read -r image_name || [ -n "$image_name" ]; do
       echo "DOCKER_REGISTRY_USERNAME and DOCKER_REGISTRY_PASSWORD are required without --file-auth" >&2
       exit 254
     fi
-    while IFS= read -r registry_target || [ -n "$registry_target" ]; do
-      image_destination=$registry_target/$path_image_dst
+    while IFS="$(printf '\t')" read -r registry_target target_namespace || [ -n "$registry_target" ]; do
+      image_destination=$(image_destination_for_target "$registry_target" "$target_namespace")
       export SOURCE_IMAGE=$image_source TARGET_REGISTRY=$registry_target DESTINATION=$image_destination
       if ! yq -n -o=json \
         '{"images": {(strenv(SOURCE_IMAGE)): [strenv(DESTINATION)]}, "auth": {(strenv(TARGET_REGISTRY)): {"username": strenv(DOCKER_MIRROR_REGISTRY_USERNAME), "password": strenv(DOCKER_MIRROR_REGISTRY_PASSWORD)}}} * {"auth": {(strenv(SOURCE_REGISTRY)): {"username": strenv(DOCKER_REGISTRY_USERNAME), "password": strenv(DOCKER_REGISTRY_PASSWORD)}}}' \
