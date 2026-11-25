@@ -69,7 +69,7 @@ jobs:
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   job-sync-images:
-    needs: ["job-docker_kit", "job-full-stack", "job-core"]
+    needs: ["job-docker_kit", "job-k3s-ctk", "job-k0s-ctk"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
