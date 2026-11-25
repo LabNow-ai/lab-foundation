@@ -215,25 +215,6 @@ jobs:
             --build-arg "ARG_PROFILE_RUST=base"
           push_image full-stack
 
-  ## DockerKit - including image-syncer and docker-compsoe
-  job-docker_kit:
-    name: 'docker-kit'
-    needs: ["job-base"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - env:
-          AUTH_FILE_CONTENT: ${{ secrets.AUTH_FILE_CONTENT }}
-          DOCKER_MIRROR_REGISTRY: ${{ vars.DOCKER_MIRROR_REGISTRY }}
-          DOCKER_MIRROR_TARGETS: ${{ vars.DOCKER_MIRROR_TARGETS }}
-        run: |
-          source ./tool.sh && build_image docker-kit latest docker_docker_kit/docker-kit.Dockerfile && push_image docker-kit
-          echo "jobs: { job-docker_kit: { name: 'docker-kit' } }" | tee ".github/workflows/build-docker.yml" > /dev/null
-          printf '%s' "$AUTH_FILE_CONTENT" > .github/workflows/auth.json && ls -alh ./.github/workflows
-          printenv | grep -v 'PATH' > /tmp/docker.env && echo "REGISTRY_URL=${REGISTRY_DST}" >> /tmp/docker.env
-          docker run --rm --env-file /tmp/docker.env -v $(pwd):/tmp -w /tmp ${IMG_PREFIX_DST:-labnow}/docker-kit \
-            script-sync-image.sh --file-auth=/tmp/.github/workflows/auth.json
-
   ## Sync all images in this build (listed by "names") to mirror registry.
   job-sync-images:
     needs: ["job-docker_kit", "job-full-stack", "job-core"]
