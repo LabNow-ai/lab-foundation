@@ -51,7 +51,6 @@ jobs:
   ## DockerKit - including image-syncer and docker-compsoe
   job-docker_kit:
     name: 'docker-kit'
-    needs: ["job-base"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
