@@ -217,7 +217,23 @@ jobs:
 
   ## Sync all images in this build (listed by "names") to mirror registry.
   job-sync-images:
-    needs: ["job-full-stack", "job-core"]
+    needs:
+      - job-python
+      - job-core
+      - job-py-data
+      - job-py-chem
+      - job-py-std
+      - job-py-jdk
+      - job-r-base
+      - job-r-std
+      - job-node
+      - job-bun
+      - job-jdk
+      - job-julia
+      - job-go
+      - job-rust
+      - job-data-science-stack
+      - job-full-stack
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

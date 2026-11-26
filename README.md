@@ -50,7 +50,10 @@ Image availability and tags may vary by registry. Browse the current images on [
 | Focused execution environments | `py-data`, `py-std`, `py-chem`, `py-jdk` | Ready-made Python environments with different tool and dependency profiles |
 | Broad toolchain environments | `core`, `data-science-stack`, `full-stack` | Multi-language environments for agents or users that need a wider set of installed tools |
 | Accelerated execution environments | `torch`, `tf2`, `paddle-3.0`, `py-nlp`, `py-cv`, `core-cuda` | GPU/framework-oriented variants (see the [GPU workflow](.github/workflows/build-docker-gpu.yml)) |
-| Service and operations images | `postgres-16`, `postgres-17`, `postgres-18`, `*-ext`, `docker-kit` | PostgreSQL environments with optional extensions, plus Docker Compose and image-sync utilities |
+| Database images | `postgres-16`, `postgres-17`, `postgres-18`, `*-ext` | PostgreSQL base images and variants with additional extensions |
+| Container and Kubernetes utilities | `docker-kit`, `k3s-ctk`, `k0s-ctk` | Docker/image-sync utilities and asset bundles for installing k3s or k0s in air-gapped environments |
+
+The `k3s-ctk` and `k0s-ctk` images package the distribution binaries, offline image bundles, Kubernetes tools, and setup scripts. Run an image with a mounted destination to export these assets to a host; the image does not itself run a Kubernetes cluster. See [`docker_kube/README.md`](docker_kube/README.md) for the offline installation steps.
 
 ## Quick start
 
@@ -70,9 +73,23 @@ An agent runtime or environment service can use the same pattern to launch a sel
 docker run --rm -it --gpus all quay.io/labnow/torch:latest bash
 ```
 
-## Build a custom environment
+## Repository layout and builds
 
-The image definitions are organized by layer: `docker_atom/` (OS setup), `docker_base/` (Python runtime), `docker_core/` (language and workload packages), and additional directories for CUDA, PostgreSQL, and Docker utilities. For example, build a Python environment with database packages on top of the published `base` image:
+Image definitions are grouped by their purpose:
+
+| Directory | Contents |
+| --- | --- |
+| `docker_atom/` | OS-level foundation and shared system setup |
+| `docker_base/` | Base runtime images, including the configurable Python runtime |
+| `docker_core/` | Profile-driven language and workload environments |
+| `docker_cuda/` | NVIDIA CUDA base and container toolkit images |
+| `docker_db_postgres/` | PostgreSQL images with optional extensions |
+| `docker_docker_kit/` | Docker utility and image synchronization tooling |
+| `docker_kube/` | k3s/k0s air-gap installation asset images and setup scripts |
+
+The GitHub Actions workflows in `.github/workflows/` build and publish these groups: [`build-docker.yml`](.github/workflows/build-docker.yml) covers the standard runtime and workload images, while [`build-docker-gpu.yml`](.github/workflows/build-docker-gpu.yml), [`build-docker-db.yml`](.github/workflows/build-docker-db.yml), and [`build-docker-kube.yml`](.github/workflows/build-docker-kube.yml) cover GPU, PostgreSQL, and Kubernetes/container utility images respectively. The Kubernetes workflow builds `k3s-ctk` and `k0s-ctk` with a configurable Kubernetes version and synchronizes its published images.
+
+To build a custom Python environment with database packages on top of the published `base` image:
 
 ```bash
 docker build \
@@ -83,4 +100,4 @@ docker build \
   docker_core/
 ```
 
-Available profiles and package lists are defined in `docker_core/work/`. See the [build workflows](.github/workflows/) for the published image configurations.
+Available profiles and package lists are defined in `docker_core/work/`. See each module's Dockerfiles and README for module-specific details.
